@@ -10,14 +10,14 @@ for f in files:
     m = re.search(r"(run\d)\/(.+)[-_](WGS|NextRAD)_(S\d+)_(R\d)_\d+\.", f)
     lane, sample, dtype, sid, mate = m.groups()
     if dtype == "WGS":
-        filemap[sample][mate].append(f)
+        fpath = "rawdata" + f[1:]
+        filemap[sample][mate].append(fpath)
 
 with open("samples.yml", "w") as fh:
     for samp, data in filemap.items():
         print(samp, ":", file=fh, sep='')
         for pair, files in data.items():
-            print("  ", pair, ":", file=fh, sep='')
-            for f in files:
-                print("    - ", f, file=fh, sep='')
+            print("  ", pair, ":", file=fh, sep='', end=" ")
+            print("[\"", "\", \"".join(files), "\"]", file=fh, sep='')
 
 
