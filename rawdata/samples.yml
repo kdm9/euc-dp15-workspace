@@ -1,0 +1,288 @@
+J327:
+  R1: ["./run2/J327-WGS_S36_R1_001.fastq.gz", "./run1/J327-WGS_S36_R1_001.fastq.gz]
+  R2: ["./run2/J327-WGS_S36_R2_001.fastq.gz", "./run1/J327-WGS_S36_R2_001.fastq.gz]
+J381:
+  R1: ["./run2/J381-WGS_S83_R1_001.fastq.gz", "./run1/J381-WGS_S83_R1_001.fastq.gz]
+  R2: ["./run2/J381-WGS_S83_R2_001.fastq.gz", "./run1/J381-WGS_S83_R2_001.fastq.gz]
+J376:
+  R1: ["./run2/J376-WGS_S28_R1_001.fastq.gz", "./run1/J376-WGS_S28_R1_001.fastq.gz]
+  R2: ["./run2/J376-WGS_S28_R2_001.fastq.gz", "./run1/J376-WGS_S28_R2_001.fastq.gz]
+VWG14:
+  R1: ["./run2/VWG14-WGS_S87_R1_001.fastq.gz", "./run1/VWG14-WGS_S87_R1_001.fastq.gz]
+  R2: ["./run2/VWG14-WGS_S87_R2_001.fastq.gz", "./run1/VWG14-WGS_S87_R2_001.fastq.gz]
+J294:
+  R1: ["./run2/J294-WGS_S2_R1_001.fastq.gz", "./run1/J294-WGS_S2_R1_001.fastq.gz]
+  R2: ["./run2/J294-WGS_S2_R2_001.fastq.gz", "./run1/J294-WGS_S2_R2_001.fastq.gz]
+J374:
+  R1: ["./run2/J374-WGS_S62_R1_001.fastq.gz", "./run1/J374-WGS_S62_R1_001.fastq.gz]
+  R2: ["./run2/J374-WGS_S62_R2_001.fastq.gz", "./run1/J374-WGS_S62_R2_001.fastq.gz]
+J373:
+  R1: ["./run2/J373-WGS_S29_R1_001.fastq.gz", "./run1/J373-WGS_S29_R1_001.fastq.gz]
+  R2: ["./run2/J373-WGS_S29_R2_001.fastq.gz", "./run1/J373-WGS_S29_R2_001.fastq.gz]
+J355:
+  R1: ["./run2/J355-WGS_S80_R1_001.fastq.gz", "./run1/J355-WGS_S80_R1_001.fastq.gz]
+  R2: ["./run2/J355-WGS_S80_R2_001.fastq.gz", "./run1/J355-WGS_S80_R2_001.fastq.gz]
+J324:
+  R1: ["./run2/J324-WGS_S66_R1_001.fastq.gz", "./run1/J324-WGS_S66_R1_001.fastq.gz]
+  R2: ["./run2/J324-WGS_S66_R2_001.fastq.gz", "./run1/J324-WGS_S66_R2_001.fastq.gz]
+J345:
+  R1: ["./run2/J345-WGS_S73_R1_001.fastq.gz", "./run1/J345-WGS_S73_R1_001.fastq.gz]
+  R2: ["./run2/J345-WGS_S73_R2_001.fastq.gz", "./run1/J345-WGS_S73_R2_001.fastq.gz]
+J359:
+  R1: ["./run2/J359-WGS_S16_R1_001.fastq.gz", "./run1/J359-WGS_S16_R1_001.fastq.gz]
+  R2: ["./run2/J359-WGS_S16_R2_001.fastq.gz", "./run1/J359-WGS_S16_R2_001.fastq.gz]
+J351-plus:
+  R1: ["./run2/J351-plus-WGS_S25_R1_001.fastq.gz", "./run1/J351-plus-WGS_S25_R1_001.fastq.gz]
+  R2: ["./run2/J351-plus-WGS_S25_R2_001.fastq.gz", "./run1/J351-plus-WGS_S25_R2_001.fastq.gz]
+J315:
+  R1: ["./run2/J315-WGS_S75_R1_001.fastq.gz", "./run1/J315-WGS_S75_R1_001.fastq.gz]
+  R2: ["./run2/J315-WGS_S75_R2_001.fastq.gz", "./run1/J315-WGS_S75_R2_001.fastq.gz]
+J328:
+  R1: ["./run2/J328-WGS_S59_R1_001.fastq.gz", "./run1/J328-WGS_S59_R1_001.fastq.gz]
+  R2: ["./run2/J328-WGS_S59_R2_001.fastq.gz", "./run1/J328-WGS_S59_R2_001.fastq.gz]
+TLC715:
+  R1: ["./run2/TLC715-WGS_S55_R1_001.fastq.gz", "./run1/TLC715-WGS_S55_R1_001.fastq.gz]
+  R2: ["./run2/TLC715-WGS_S55_R2_001.fastq.gz", "./run1/TLC715-WGS_S55_R2_001.fastq.gz]
+J358:
+  R1: ["./run2/J358-WGS_S78_R1_001.fastq.gz", "./run1/J358-WGS_S78_R1_001.fastq.gz]
+  R2: ["./run2/J358-WGS_S78_R2_001.fastq.gz", "./run1/J358-WGS_S78_R2_001.fastq.gz]
+J322:
+  R1: ["./run2/J322-WGS_S12_R1_001.fastq.gz", "./run1/J322-WGS_S12_R1_001.fastq.gz]
+  R2: ["./run2/J322-WGS_S12_R2_001.fastq.gz", "./run1/J322-WGS_S12_R2_001.fastq.gz]
+J387:
+  R1: ["./run2/J387-WGS_S35_R1_001.fastq.gz", "./run1/J387-WGS_S35_R1_001.fastq.gz]
+  R2: ["./run2/J387-WGS_S35_R2_001.fastq.gz", "./run1/J387-WGS_S35_R2_001.fastq.gz]
+J398:
+  R1: ["./run2/J398-WGS_S45_R1_001.fastq.gz", "./run1/J398-WGS_S45_R1_001.fastq.gz]
+  R2: ["./run2/J398-WGS_S45_R2_001.fastq.gz", "./run1/J398-WGS_S45_R2_001.fastq.gz]
+J339:
+  R1: ["./run2/J339-WGS_S46_R1_001.fastq.gz", "./run1/J339-WGS_S46_R1_001.fastq.gz]
+  R2: ["./run2/J339-WGS_S46_R2_001.fastq.gz", "./run1/J339-WGS_S46_R2_001.fastq.gz]
+J334:
+  R1: ["./run2/J334-WGS_S70_R1_001.fastq.gz", "./run1/J334-WGS_S70_R1_001.fastq.gz]
+  R2: ["./run2/J334-WGS_S70_R2_001.fastq.gz", "./run1/J334-WGS_S70_R2_001.fastq.gz]
+NDU10:
+  R1: ["./run2/NDU10-WGS_S90_R1_001.fastq.gz", "./run1/NDU10-WGS_S90_R1_001.fastq.gz]
+  R2: ["./run2/NDU10-WGS_S90_R2_001.fastq.gz", "./run1/NDU10-WGS_S90_R2_001.fastq.gz]
+J354:
+  R1: ["./run2/J354-WGS_S49_R1_001.fastq.gz", "./run1/J354-WGS_S49_R1_001.fastq.gz]
+  R2: ["./run2/J354-WGS_S49_R2_001.fastq.gz", "./run1/J354-WGS_S49_R2_001.fastq.gz]
+J326:
+  R1: ["./run2/J326-WGS_S68_R1_001.fastq.gz", "./run1/J326-WGS_S68_R1_001.fastq.gz]
+  R2: ["./run2/J326-WGS_S68_R2_001.fastq.gz", "./run1/J326-WGS_S68_R2_001.fastq.gz]
+Blank1:
+  R1: ["./run2/Blank1-WGS_S1_R1_001.fastq.gz", "./run1/Blank1-WGS_S1_R1_001.fastq.gz]
+  R2: ["./run2/Blank1-WGS_S1_R2_001.fastq.gz", "./run1/Blank1-WGS_S1_R2_001.fastq.gz]
+J348:
+  R1: ["./run2/J348-WGS_S95_R1_001.fastq.gz", "./run1/J348-WGS_S95_R1_001.fastq.gz]
+  R2: ["./run2/J348-WGS_S95_R2_001.fastq.gz", "./run1/J348-WGS_S95_R2_001.fastq.gz]
+J333-plus:
+  R1: ["./run2/J333-plus-WGS_S79_R1_001.fastq.gz", "./run1/J333-plus-WGS_S79_R1_001.fastq.gz]
+  R2: ["./run2/J333-plus-WGS_S79_R2_001.fastq.gz", "./run1/J333-plus-WGS_S79_R2_001.fastq.gz]
+J352:
+  R1: ["./run2/J352-WGS_S30_R1_001.fastq.gz", "./run1/J352-WGS_S30_R1_001.fastq.gz]
+  R2: ["./run2/J352-WGS_S30_R2_001.fastq.gz", "./run1/J352-WGS_S30_R2_001.fastq.gz]
+J333:
+  R1: ["./run2/J333-WGS_S89_R1_001.fastq.gz", "./run1/J333-WGS_S89_R1_001.fastq.gz]
+  R2: ["./run2/J333-WGS_S89_R2_001.fastq.gz", "./run1/J333-WGS_S89_R2_001.fastq.gz]
+J321g:
+  R1: ["./run2/J321g-WGS_S8_R1_001.fastq.gz", "./run1/J321g-WGS_S8_R1_001.fastq.gz]
+  R2: ["./run2/J321g-WGS_S8_R2_001.fastq.gz", "./run1/J321g-WGS_S8_R2_001.fastq.gz]
+TLC725:
+  R1: ["./run2/TLC725-WGS_S22_R1_001.fastq.gz", "./run1/TLC725-WGS_S22_R1_001.fastq.gz]
+  R2: ["./run2/TLC725-WGS_S22_R2_001.fastq.gz", "./run1/TLC725-WGS_S22_R2_001.fastq.gz]
+J371:
+  R1: ["./run2/J371-WGS_S94_R1_001.fastq.gz", "./run1/J371-WGS_S94_R1_001.fastq.gz]
+  R2: ["./run2/J371-WGS_S94_R2_001.fastq.gz", "./run1/J371-WGS_S94_R2_001.fastq.gz]
+RA1006:
+  R1: ["./run2/RA1006-WGS_S71_R1_001.fastq.gz", "./run1/RA1006-WGS_S71_R1_001.fastq.gz]
+  R2: ["./run2/RA1006-WGS_S71_R2_001.fastq.gz", "./run1/RA1006-WGS_S71_R2_001.fastq.gz]
+J369:
+  R1: ["./run2/J369-WGS_S48_R1_001.fastq.gz", "./run1/J369-WGS_S48_R1_001.fastq.gz]
+  R2: ["./run2/J369-WGS_S48_R2_001.fastq.gz", "./run1/J369-WGS_S48_R2_001.fastq.gz]
+J375:
+  R1: ["./run2/J375-WGS_S6_R1_001.fastq.gz", "./run1/J375-WGS_S6_R1_001.fastq.gz]
+  R2: ["./run2/J375-WGS_S6_R2_001.fastq.gz", "./run1/J375-WGS_S6_R2_001.fastq.gz]
+J318:
+  R1: ["./run2/J318-WGS_S18_R1_001.fastq.gz", "./run1/J318-WGS_S18_R1_001.fastq.gz]
+  R2: ["./run2/J318-WGS_S18_R2_001.fastq.gz", "./run1/J318-WGS_S18_R2_001.fastq.gz]
+J379:
+  R1: ["./run2/J379-WGS_S38_R1_001.fastq.gz", "./run1/J379-WGS_S38_R1_001.fastq.gz]
+  R2: ["./run2/J379-WGS_S38_R2_001.fastq.gz", "./run1/J379-WGS_S38_R2_001.fastq.gz]
+J366-plus:
+  R1: ["./run2/J366-plus-WGS_S61_R1_001.fastq.gz", "./run1/J366-plus-WGS_S61_R1_001.fastq.gz]
+  R2: ["./run2/J366-plus-WGS_S61_R2_001.fastq.gz", "./run1/J366-plus-WGS_S61_R2_001.fastq.gz]
+J330:
+  R1: ["./run2/J330-WGS_S53_R1_001.fastq.gz", "./run1/J330-WGS_S53_R1_001.fastq.gz]
+  R2: ["./run2/J330-WGS_S53_R2_001.fastq.gz", "./run1/J330-WGS_S53_R2_001.fastq.gz]
+J367i:
+  R1: ["./run2/J367i-WGS_S4_R1_001.fastq.gz", "./run1/J367i-WGS_S4_R1_001.fastq.gz]
+  R2: ["./run2/J367i-WGS_S4_R2_001.fastq.gz", "./run1/J367i-WGS_S4_R2_001.fastq.gz]
+J364:
+  R1: ["./run2/J364-WGS_S17_R1_001.fastq.gz", "./run1/J364-WGS_S17_R1_001.fastq.gz]
+  R2: ["./run2/J364-WGS_S17_R2_001.fastq.gz", "./run1/J364-WGS_S17_R2_001.fastq.gz]
+J329:
+  R1: ["./run2/J329-WGS_S21_R1_001.fastq.gz", "./run1/J329-WGS_S21_R1_001.fastq.gz]
+  R2: ["./run2/J329-WGS_S21_R2_001.fastq.gz", "./run1/J329-WGS_S21_R2_001.fastq.gz]
+NCR13:
+  R1: ["./run2/NCR13-WGS_S37_R1_001.fastq.gz", "./run1/NCR13-WGS_S37_R1_001.fastq.gz]
+  R2: ["./run2/NCR13-WGS_S37_R2_001.fastq.gz", "./run1/NCR13-WGS_S37_R2_001.fastq.gz]
+J331:
+  R1: ["./run2/J331-WGS_S92_R1_001.fastq.gz", "./run1/J331-WGS_S92_R1_001.fastq.gz]
+  R2: ["./run2/J331-WGS_S92_R2_001.fastq.gz", "./run1/J331-WGS_S92_R2_001.fastq.gz]
+J342:
+  R1: ["./run2/J342-WGS_S47_R1_001.fastq.gz", "./run1/J342-WGS_S47_R1_001.fastq.gz]
+  R2: ["./run2/J342-WGS_S47_R2_001.fastq.gz", "./run1/J342-WGS_S47_R2_001.fastq.gz]
+J362-young:
+  R1: ["./run2/J362-young-WGS_S41_R1_001.fastq.gz", "./run1/J362-young-WGS_S41_R1_001.fastq.gz]
+  R2: ["./run2/J362-young-WGS_S41_R2_001.fastq.gz", "./run1/J362-young-WGS_S41_R2_001.fastq.gz]
+J363:
+  R1: ["./run2/J363-WGS_S33_R1_001.fastq.gz", "./run1/J363-WGS_S33_R1_001.fastq.gz]
+  R2: ["./run2/J363-WGS_S33_R2_001.fastq.gz", "./run1/J363-WGS_S33_R2_001.fastq.gz]
+J353:
+  R1: ["./run2/J353-WGS_S69_R1_001.fastq.gz", "./run1/J353-WGS_S69_R1_001.fastq.gz]
+  R2: ["./run2/J353-WGS_S69_R2_001.fastq.gz", "./run1/J353-WGS_S69_R2_001.fastq.gz]
+J383:
+  R1: ["./run2/J383-WGS_S19_R1_001.fastq.gz", "./run1/J383-WGS_S19_R1_001.fastq.gz]
+  R2: ["./run2/J383-WGS_S19_R2_001.fastq.gz", "./run1/J383-WGS_S19_R2_001.fastq.gz]
+J349:
+  R1: ["./run2/J349-WGS_S93_R1_001.fastq.gz", "./run1/J349-WGS_S93_R1_001.fastq.gz]
+  R2: ["./run2/J349-WGS_S93_R2_001.fastq.gz", "./run1/J349-WGS_S93_R2_001.fastq.gz]
+J363-plus:
+  R1: ["./run2/J363-plus-WGS_S43_R1_001.fastq.gz", "./run1/J363-plus-WGS_S43_R1_001.fastq.gz]
+  R2: ["./run2/J363-plus-WGS_S43_R2_001.fastq.gz", "./run1/J363-plus-WGS_S43_R2_001.fastq.gz]
+J317:
+  R1: ["./run2/J317-WGS_S11_R1_001.fastq.gz", "./run1/J317-WGS_S11_R1_001.fastq.gz]
+  R2: ["./run2/J317-WGS_S11_R2_001.fastq.gz", "./run1/J317-WGS_S11_R2_001.fastq.gz]
+J366:
+  R1: ["./run2/J366-WGS_S9_R1_001.fastq.gz", "./run1/J366-WGS_S9_R1_001.fastq.gz]
+  R2: ["./run2/J366-WGS_S9_R2_001.fastq.gz", "./run1/J366-WGS_S9_R2_001.fastq.gz]
+J335:
+  R1: ["./run2/J335-WGS_S14_R1_001.fastq.gz", "./run1/J335-WGS_S14_R1_001.fastq.gz]
+  R2: ["./run2/J335-WGS_S14_R2_001.fastq.gz", "./run1/J335-WGS_S14_R2_001.fastq.gz]
+J303:
+  R1: ["./run2/J303-WGS_S74_R1_001.fastq.gz", "./run1/J303-WGS_S74_R1_001.fastq.gz]
+  R2: ["./run2/J303-WGS_S74_R2_001.fastq.gz", "./run1/J303-WGS_S74_R2_001.fastq.gz]
+J311:
+  R1: ["./run2/J311-WGS_S27_R1_001.fastq.gz", "./run1/J311-WGS_S27_R1_001.fastq.gz]
+  R2: ["./run2/J311-WGS_S27_R2_001.fastq.gz", "./run1/J311-WGS_S27_R2_001.fastq.gz]
+J301:
+  R1: ["./run2/J301-WGS_S3_R1_001.fastq.gz", "./run1/J301-WGS_S3_R1_001.fastq.gz]
+  R2: ["./run2/J301-WGS_S3_R2_001.fastq.gz", "./run1/J301-WGS_S3_R2_001.fastq.gz]
+J361:
+  R1: ["./run2/J361-WGS_S84_R1_001.fastq.gz", "./run1/J361-WGS_S84_R1_001.fastq.gz]
+  R2: ["./run2/J361-WGS_S84_R2_001.fastq.gz", "./run1/J361-WGS_S84_R2_001.fastq.gz]
+TLC775:
+  R1: ["./run2/TLC775-WGS_S76_R1_001.fastq.gz", "./run1/TLC775-WGS_S76_R1_001.fastq.gz]
+  R2: ["./run2/TLC775-WGS_S76_R2_001.fastq.gz", "./run1/TLC775-WGS_S76_R2_001.fastq.gz]
+J385:
+  R1: ["./run2/J385-WGS_S20_R1_001.fastq.gz", "./run1/J385-WGS_S20_R1_001.fastq.gz]
+  R2: ["./run2/J385-WGS_S20_R2_001.fastq.gz", "./run1/J385-WGS_S20_R2_001.fastq.gz]
+J355b:
+  R1: ["./run2/J355b-WGS_S5_R1_001.fastq.gz", "./run1/J355b-WGS_S5_R1_001.fastq.gz]
+  R2: ["./run2/J355b-WGS_S5_R2_001.fastq.gz", "./run1/J355b-WGS_S5_R2_001.fastq.gz]
+J316:
+  R1: ["./run2/J316-WGS_S34_R1_001.fastq.gz", "./run1/J316-WGS_S34_R1_001.fastq.gz]
+  R2: ["./run2/J316-WGS_S34_R2_001.fastq.gz", "./run1/J316-WGS_S34_R2_001.fastq.gz]
+J389:
+  R1: ["./run2/J389-WGS_S44_R1_001.fastq.gz", "./run1/J389-WGS_S44_R1_001.fastq.gz]
+  R2: ["./run2/J389-WGS_S44_R2_001.fastq.gz", "./run1/J389-WGS_S44_R2_001.fastq.gz]
+J310:
+  R1: ["./run2/J310-WGS_S40_R1_001.fastq.gz", "./run1/J310-WGS_S40_R1_001.fastq.gz]
+  R2: ["./run2/J310-WGS_S40_R2_001.fastq.gz", "./run1/J310-WGS_S40_R2_001.fastq.gz]
+J340:
+  R1: ["./run2/J340-WGS_S52_R1_001.fastq.gz", "./run1/J340-WGS_S52_R1_001.fastq.gz]
+  R2: ["./run2/J340-WGS_S52_R2_001.fastq.gz", "./run1/J340-WGS_S52_R2_001.fastq.gz]
+NBJ30:
+  R1: ["./run2/NBJ30-WGS_S64_R1_001.fastq.gz", "./run1/NBJ30-WGS_S64_R1_001.fastq.gz]
+  R2: ["./run2/NBJ30-WGS_S64_R2_001.fastq.gz", "./run1/NBJ30-WGS_S64_R2_001.fastq.gz]
+J372:
+  R1: ["./run2/J372-WGS_S7_R1_001.fastq.gz", "./run1/J372-WGS_S7_R1_001.fastq.gz]
+  R2: ["./run2/J372-WGS_S7_R2_001.fastq.gz", "./run1/J372-WGS_S7_R2_001.fastq.gz]
+J351:
+  R1: ["./run2/J351-WGS_S57_R1_001.fastq.gz", "./run1/J351-WGS_S57_R1_001.fastq.gz]
+  R2: ["./run2/J351-WGS_S57_R2_001.fastq.gz", "./run1/J351-WGS_S57_R2_001.fastq.gz]
+J338:
+  R1: ["./run2/J338-WGS_S15_R1_001.fastq.gz", "./run1/J338-WGS_S15_R1_001.fastq.gz]
+  R2: ["./run2/J338-WGS_S15_R2_001.fastq.gz", "./run1/J338-WGS_S15_R2_001.fastq.gz]
+NAL05:
+  R1: ["./run2/NAL05-WGS_S23_R1_001.fastq.gz", "./run1/NAL05-WGS_S23_R1_001.fastq.gz]
+  R2: ["./run2/NAL05-WGS_S23_R2_001.fastq.gz", "./run1/NAL05-WGS_S23_R2_001.fastq.gz]
+J368:
+  R1: ["./run2/J368-WGS_S60_R1_001.fastq.gz", "./run1/J368-WGS_S60_R1_001.fastq.gz]
+  R2: ["./run2/J368-WGS_S60_R2_001.fastq.gz", "./run1/J368-WGS_S60_R2_001.fastq.gz]
+J357:
+  R1: ["./run2/J357-WGS_S31_R1_001.fastq.gz", "./run1/J357-WGS_S31_R1_001.fastq.gz]
+  R2: ["./run2/J357-WGS_S31_R2_001.fastq.gz", "./run1/J357-WGS_S31_R2_001.fastq.gz]
+J360:
+  R1: ["./run2/J360-WGS_S85_R1_001.fastq.gz", "./run1/J360-WGS_S85_R1_001.fastq.gz]
+  R2: ["./run2/J360-WGS_S85_R2_001.fastq.gz", "./run1/J360-WGS_S85_R2_001.fastq.gz]
+NCD30:
+  R1: ["./run2/NCD30-WGS_S91_R1_001.fastq.gz", "./run1/NCD30-WGS_S91_R1_001.fastq.gz]
+  R2: ["./run2/NCD30-WGS_S91_R2_001.fastq.gz", "./run1/NCD30-WGS_S91_R2_001.fastq.gz]
+J298:
+  R1: ["./run2/J298-WGS_S26_R1_001.fastq.gz", "./run1/J298-WGS_S26_R1_001.fastq.gz]
+  R2: ["./run2/J298-WGS_S26_R2_001.fastq.gz", "./run1/J298-WGS_S26_R2_001.fastq.gz]
+TLC726:
+  R1: ["./run2/TLC726-WGS_S51_R1_001.fastq.gz", "./run1/TLC726-WGS_S51_R1_001.fastq.gz]
+  R2: ["./run2/TLC726-WGS_S51_R2_001.fastq.gz", "./run1/TLC726-WGS_S51_R2_001.fastq.gz]
+Blank2:
+  R1: ["./run2/Blank2-WGS_S77_R1_001.fastq.gz", "./run1/Blank2-WGS_S77_R1_001.fastq.gz]
+  R2: ["./run2/Blank2-WGS_S77_R2_001.fastq.gz", "./run1/Blank2-WGS_S77_R2_001.fastq.gz]
+VMA18:
+  R1: ["./run2/VMA18-WGS_S67_R1_001.fastq.gz", "./run1/VMA18-WGS_S67_R1_001.fastq.gz]
+  R2: ["./run2/VMA18-WGS_S67_R2_001.fastq.gz", "./run1/VMA18-WGS_S67_R2_001.fastq.gz]
+J307:
+  R1: ["./run2/J307-WGS_S10_R1_001.fastq.gz", "./run1/J307-WGS_S10_R1_001.fastq.gz]
+  R2: ["./run2/J307-WGS_S10_R2_001.fastq.gz", "./run1/J307-WGS_S10_R2_001.fastq.gz]
+J370:
+  R1: ["./run2/J370-WGS_S88_R1_001.fastq.gz", "./run1/J370-WGS_S88_R1_001.fastq.gz]
+  R2: ["./run2/J370-WGS_S88_R2_001.fastq.gz", "./run1/J370-WGS_S88_R2_001.fastq.gz]
+J319:
+  R1: ["./run2/J319-WGS_S42_R1_001.fastq.gz", "./run1/J319-WGS_S42_R1_001.fastq.gz]
+  R2: ["./run2/J319-WGS_S42_R2_001.fastq.gz", "./run1/J319-WGS_S42_R2_001.fastq.gz]
+J367:
+  R1: ["./run2/J367-WGS_S54_R1_001.fastq.gz", "./run1/J367-WGS_S54_R1_001.fastq.gz]
+  R2: ["./run2/J367-WGS_S54_R2_001.fastq.gz", "./run1/J367-WGS_S54_R2_001.fastq.gz]
+J320:
+  R1: ["./run2/J320-WGS_S82_R1_001.fastq.gz", "./run1/J320-WGS_S82_R1_001.fastq.gz]
+  R2: ["./run2/J320-WGS_S82_R2_001.fastq.gz", "./run1/J320-WGS_S82_R2_001.fastq.gz]
+J343:
+  R1: ["./run2/J343-WGS_S81_R1_001.fastq.gz", "./run1/J343-WGS_S81_R1_001.fastq.gz]
+  R2: ["./run2/J343-WGS_S81_R2_001.fastq.gz", "./run1/J343-WGS_S81_R2_001.fastq.gz]
+FDK10:
+  R1: ["./run2/FDK10-WGS_S58_R1_001.fastq.gz", "./run1/FDK10-WGS_S58_R1_001.fastq.gz]
+  R2: ["./run2/FDK10-WGS_S58_R2_001.fastq.gz", "./run1/FDK10-WGS_S58_R2_001.fastq.gz]
+J393:
+  R1: ["./run2/J393-WGS_S72_R1_001.fastq.gz", "./run1/J393-WGS_S72_R1_001.fastq.gz]
+  R2: ["./run2/J393-WGS_S72_R2_001.fastq.gz", "./run1/J393-WGS_S72_R2_001.fastq.gz]
+J347:
+  R1: ["./run2/J347-WGS_S86_R1_001.fastq.gz", "./run1/J347-WGS_S86_R1_001.fastq.gz]
+  R2: ["./run2/J347-WGS_S86_R2_001.fastq.gz", "./run1/J347-WGS_S86_R2_001.fastq.gz]
+TLC720:
+  R1: ["./run2/TLC720-WGS_S39_R1_001.fastq.gz", "./run1/TLC720-WGS_S39_R1_001.fastq.gz]
+  R2: ["./run2/TLC720-WGS_S39_R2_001.fastq.gz", "./run1/TLC720-WGS_S39_R2_001.fastq.gz]
+J365:
+  R1: ["./run2/J365-WGS_S13_R1_001.fastq.gz", "./run1/J365-WGS_S13_R1_001.fastq.gz]
+  R2: ["./run2/J365-WGS_S13_R2_001.fastq.gz", "./run1/J365-WGS_S13_R2_001.fastq.gz]
+J395:
+  R1: ["./run2/J395-WGS_S32_R1_001.fastq.gz", "./run1/J395-WGS_S32_R1_001.fastq.gz]
+  R2: ["./run2/J395-WGS_S32_R2_001.fastq.gz", "./run1/J395-WGS_S32_R2_001.fastq.gz]
+J350:
+  R1: ["./run2/J350-WGS_S63_R1_001.fastq.gz", "./run1/J350-WGS_S63_R1_001.fastq.gz]
+  R2: ["./run2/J350-WGS_S63_R2_001.fastq.gz", "./run1/J350-WGS_S63_R2_001.fastq.gz]
+J346:
+  R1: ["./run2/J346-WGS_S65_R1_001.fastq.gz", "./run1/J346-WGS_S65_R1_001.fastq.gz]
+  R2: ["./run2/J346-WGS_S65_R2_001.fastq.gz", "./run1/J346-WGS_S65_R2_001.fastq.gz]
+J345-plus:
+  R1: ["./run2/J345-plus-WGS_S96_R1_001.fastq.gz", "./run1/J345-plus-WGS_S96_R1_001.fastq.gz]
+  R2: ["./run2/J345-plus-WGS_S96_R2_001.fastq.gz", "./run1/J345-plus-WGS_S96_R2_001.fastq.gz]
+J341:
+  R1: ["./run2/J341-WGS_S24_R1_001.fastq.gz", "./run1/J341-WGS_S24_R1_001.fastq.gz]
+  R2: ["./run2/J341-WGS_S24_R2_001.fastq.gz", "./run1/J341-WGS_S24_R2_001.fastq.gz]
+J296:
+  R1: ["./run2/J296-WGS_S50_R1_001.fastq.gz", "./run1/J296-WGS_S50_R1_001.fastq.gz]
+  R2: ["./run2/J296-WGS_S50_R2_001.fastq.gz", "./run1/J296-WGS_S50_R2_001.fastq.gz]
+J344:
+  R1: ["./run2/J344-WGS_S56_R1_001.fastq.gz", "./run1/J344-WGS_S56_R1_001.fastq.gz]
+  R2: ["./run2/J344-WGS_S56_R2_001.fastq.gz", "./run1/J344-WGS_S56_R2_001.fastq.gz]
