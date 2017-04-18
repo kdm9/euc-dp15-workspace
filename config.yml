@@ -1,2 +1,8 @@
 qc:
   {}
+
+mapping:
+  ref: grandis
+
+refs:
+  grandis: data/refs/grandis/Egrandis_v2.fasta
