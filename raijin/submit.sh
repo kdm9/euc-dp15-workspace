@@ -2,13 +2,13 @@
 logdir=raijin/log
 if [ -d $logdir ]
 then
-  pushd $logdir
+  pushd $logdir >/dev/null
   if [ -n "$(ls *.ER *.OU 2>/dev/null)" ]
   then
-    tar cvf `date +%y%m%d_%H%M%s`.tar *.OU *.ER 2>/dev/null
+    tar cf `date +%y%m%d_%H%M%S`.tar *.OU *.ER 2>/dev/null
     rm *.OU *.ER
   fi
-  popd
+  popd >/dev/null
 else
   mkdir -p $logdir
 fi

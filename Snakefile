@@ -6,8 +6,9 @@ SAMPLES = yaml.load(open("rawdata/samples.yml"))
 rule all:
     input:
         expand("data/reads/{sample}.fastq.gz", sample=SAMPLES),
-        expand("data/aln/ngm/{ref}/{sample}.bam", ref=config["mapping"]["ref"],
+        expand("data/alignments/ngm/{ref}/{sample}.bam", ref=config["mapping"]["ref"],
                sample=SAMPLES),
+        expand("data/alignments/ngm/{ref}_merged.bam", ref=config["mapping"]["ref"]),
 
 rule qcreads:
     input:
@@ -39,7 +40,8 @@ rule ngmap:
         reads="data/reads/{sample}.fastq.gz",
         ref=lambda wc: config['refs'][wc.ref]
     output:
-        bam="data/aln/ngm/{ref}/{sample}.bam",
+        bam="data/alignments/ngm/{ref}/{sample}.bam",
+        bai="data/alignments/ngm/{ref}/{sample}.bam.bai",
     log:
         "data/log/ngm/{ref}_{sample}.log"
     threads:
@@ -53,6 +55,29 @@ rule ngmap:
         "   --rg-id {wildcards.sample}"
         "   --rg-sm {wildcards.sample}"
         "   --very-sensitive"
-        " | samtools view"
-        "   -Sb - >{output}"
+        " | samtools view -Suh -"
+        " | samtools sort"
+        "   -T ${{TMPDIR:-/tmp}}/{wildcards.sample}"
+        "   -@ {threads}"
+        "   -m 1G"
+        "   -o {output.bam}"
+        "   -" # stdin
+        " && samtools index {output.bam}"
+        " ) >{log} 2>&1"
+
+rule mergebam:
+    input:
+        expand("data/alignments/ngm/{{ref}}/{sample}.bam", sample=SAMPLES),
+    output:
+        bam="data/alignments/ngm/{ref}_merged.bam",
+        bai="data/alignments/ngm/{ref}_merged.bam.bai",
+    log:
+        "data/logs/mergebam/{ref}.log"
+    threads: 16
+    shell:
+        "( samtools merge"
+        "   -@ {threads}"
+        "   {output.bam}"
+        "   {input}"
+        " && samtools index {output.bam}"
         " ) >{log} 2>&1"

@@ -5,6 +5,8 @@ source /g/data1/xe2/.profile
 
 set -ueo pipefail
 
-module load snakemake adapterremoval nextgenmap
+export TMPDIR=$PBS_JOBFS
+
+module load snakemake adapterremoval nextgenmap samtools
 
 {exec_job}
