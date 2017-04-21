@@ -1,17 +1,24 @@
+#!/usr/bin/env python3
 import glob
 from collections import defaultdict
 import re
 import yaml
+from sys import stderr
 
-files = glob.glob("./run*/*.fastq.gz")
+files = glob.glob("./plate*/*.fastq.gz")
 
 filemap = defaultdict(lambda : defaultdict(list))
 for f in files:
-    m = re.search(r"(run\d)\/(.+)[-_](WGS|NextRAD)_(S\d+)_(R\d)_\d+\.", f)
-    lane, sample, dtype, sid, mate = m.groups()
-    if dtype == "WGS":
-        fpath = "rawdata" + f[1:]
-        filemap[sample][mate].append(fpath)
+    m = re.search(r"(plate[\d.]+)\/(.+)_(S\d+)_(R\d)_\d+\.", f)
+    if m is None:
+        print("WARN:", f, file=stderr)
+    lane, sample, sid, mate = m.groups()
+    if sample.endswith("-NextRAD"):
+        continue
+    if sample.endswith("-WGS"):
+        sample = sample[:-4]
+    fpath = "rawdata" + f[1:]
+    filemap[sample][mate].append(fpath)
 
 with open("samples.yml", "w") as fh:
     for samp, data in filemap.items():
