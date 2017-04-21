@@ -7,6 +7,10 @@ __default__:
 qcreads:
   time: '0:10:00'
 
+readstats:
+  time: '0:10:00'
+
+
 ngmap:
   time: '6:00:00'
 

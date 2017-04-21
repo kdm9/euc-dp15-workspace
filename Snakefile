@@ -35,6 +35,22 @@ rule qcreads:
         "   --output1 {output.reads}"
         " >{log} 2>&1"
 
+rule readstats:
+    input:
+        expand("data/reads/{sample}.fastq.gz", sample=SAMPLES),
+    output:
+        "data/readstats.tsv",
+    threads:
+        16
+    log:
+        "data/log/readstats.log",
+    shell:
+        "( seqhax stats"
+        "    -t {threads}"
+        "    {input}"
+        "    >{output}"
+        " ) 2>{log}"
+
 rule ngmap:
     input:
         reads="data/reads/{sample}.fastq.gz",
@@ -72,7 +88,7 @@ rule mergebam:
         bam="data/alignments/ngm/{ref}_merged.bam",
         bai="data/alignments/ngm/{ref}_merged.bam.bai",
     log:
-        "data/logs/mergebam/{ref}.log"
+        "data/log/mergebam/{ref}.log"
     threads: 16
     shell:
         "( samtools merge"
