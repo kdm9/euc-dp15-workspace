@@ -10,6 +10,7 @@ rule all:
         expand("data/alignments/ngm/{ref}/{sample}.bam", ref=config["mapping"]["ref"],
                sample=SAMPLES),
         expand("data/alignments/ngm/{ref}_merged.bam", ref=config["mapping"]["ref"]),
+        expand("data/variants/freebayes/{ref}.bcf", ref=config["mapping"]["ref"]),
 
 rule qcreads:
     input:
@@ -104,3 +105,25 @@ rule mergebam:
         "   {input}"
         " && samtools index {output.bam}"
         " ) >{log} 2>&1"
+
+rule freebayes:
+    input:
+        bam="data/alignments/ngm/{ref}_merged.bam",
+        bai="data/alignments/ngm/{ref}_merged.bam.bai",
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        bcf="data/variants/freebayes/{ref}.bcf",
+    log:
+        "data/log/freebayes/{ref}.log"
+    threads: 16
+    shell:
+        "( freebayes-parallel"
+        "   {input.ref}"
+        "   {threads}"
+        "   -f {input.ref}"
+        "   {input.bam}"
+        " | bcftools view"
+        "   -O b"
+        "   -o {output.bcf}"
+        " ) >{log} 2>&1"
+
