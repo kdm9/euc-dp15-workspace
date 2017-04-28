@@ -2,6 +2,7 @@ import yaml
 configfile: "config.yml"
 
 SAMPLES = yaml.load(open("rawdata/samples.yml"))
+SAMPLES_NOBLANK = [s for s in SAMPLES if not s.lower().startswith("blank")]
 
 rule all:
     input:
@@ -21,12 +22,18 @@ rule qcreads:
         "data/log/adapterremoval/{sample}.log",
     threads:
         2
+    params:
+        adp1=config["qc"]["adapter1"],
+        adp2=config["qc"]["adapter2"],
     shell:
         "AdapterRemoval"
         "   --file1 <(cat {input.r1})"
         "   --file2 <(cat {input.r2})"
+        "   --adapter1 {params.adp1}"
+        "   --adapter2 {params.adp2}"
         "   --combined-output"
         "   --interleaved-output"
+        "   --gzip"
         "   --collapse"
         "   --trimns"
         "   --trimqualities"

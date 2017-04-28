@@ -16,3 +16,7 @@ ngmap:
 
 mergebam:
   time: '4:00:00'
+
+freebayes:
+  time: '160:00:00'
+  jobfs: 400G
