@@ -11,6 +11,8 @@ rule all:
                sample=SAMPLES),
         expand("data/alignments/ngm/{ref}_merged.bam", ref=config["mapping"]["ref"]),
         expand("data/variants/freebayes/{ref}.bcf", ref=config["mapping"]["ref"]),
+        "data/readstats/readnum.tsv",
+        "data/readstats/unique-kmers.tsv",
 
 rule qcreads:
     input:
@@ -43,18 +45,37 @@ rule qcreads:
         "   --output1 {output.reads}"
         " >{log} 2>&1"
 
-rule readstats:
+rule read_count:
     input:
         expand("data/reads/{sample}.fastq.gz", sample=SAMPLES),
     output:
-        "data/readstats.tsv",
+        "data/readstats/readnum.tsv",
     threads:
         16
     log:
-        "data/log/readstats.log",
+        "data/log/readstats/seqhax-stats.log",
     shell:
         "( seqhax stats"
         "    -t {threads}"
+        "    {input}"
+        "    >{output}"
+        " ) 2>{log}"
+
+rule unique_kmers:
+    input:
+        expand("data/reads/{sample}.fastq.gz", sample=SAMPLES),
+    output:
+        "data/readstats/unique-kmers.tsv",
+    threads:
+        16
+    params:
+        kmersize=31,
+    log:
+        "data/log/readstats/unique-kmers.log",
+    shell:
+        "( kdm-unique-kmers.py"
+        "    -t {threads}"
+        "    -k {params.kmersize}"
         "    {input}"
         "    >{output}"
         " ) 2>{log}"
@@ -126,4 +147,3 @@ rule freebayes:
         "   -O b"
         "   -o {output.bcf}"
         " ) >{log} 2>&1"
-
