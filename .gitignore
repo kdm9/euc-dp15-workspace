@@ -1,0 +1,8 @@
+*.pdf
+*.html
+*.swp
+.R*
+.ipynb_checkpoints
+pandoc.out
+.~*#
+*.bak
