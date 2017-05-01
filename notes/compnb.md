@@ -122,6 +122,7 @@ I did this with Norman's IAEA sequencing runs (done the same way) and got
 exactly the same answer, so this is definitely solid.
 
 
+
 # 2017-04-27 -- Mash re-run
 
 Did a re-run of the MASH tree with k=21 and sketch size of 10000. This one
@@ -143,6 +144,7 @@ high, it probably would look better plotted coloured by series rather than
 spp](compnb-img/2017-04-27_euc-pca.svg)
 
 
+
 # 2017-04-27 -- Metadata clean up
 
 Read metadata into R notebook (in `edmund:ws/euc/metadata`). The Species column
@@ -152,3 +154,25 @@ other places. The original species column is in there as `species.orig`.
 
 However, It's missing the "series" or whatever taxonomic rank the various
 supra-specific groups are. Need to get this off Rose/Jaz.
+
+
+
+# 2017-05-01 -- Redoing the PCA visualisation
+
+By eye, the mash tree seemed to suggest that the major axes of variation were
+coverage driven. That lead me to plot PC1 against coverage:
+
+![PC1 vs Coverage](compnb-img/2017-05-01_euc-pc1-cov.svg)
+
+Looks like PC1 is pretty coverage driven, especially at the low end.
+Re-plotting the PCA without the crappy samples (coverage $\ge 1.5$x) gives the
+following:
+
+![PCA of well-covered samples](compnb-img/2017-05-01_euc-pca-pass.svg)
+
+![hclust of same](compnb-img/2017-05-01_euc-dendro-pass.svg)
+
+![neighbour joining of same](compnb-img/2017-05-01_euc-nj-pass.svg)
+
+Seems as though the trees haven't changed much, we have just removed the
+samples that make no sense.
