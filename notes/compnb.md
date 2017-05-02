@@ -116,7 +116,7 @@ Googleing these gets you to
 That seems to suggest these are NextTera V2 adapters, which makes sense. Note
 the `--adapter2` is the reverse compliment of what is on that site.
 
-## Post script -- 2017-04-26
+#### Post script -- 2017-04-26
 
 I did this with Norman's IAEA sequencing runs (done the same way) and got
 exactly the same answer, so this is definitely solid.
@@ -175,4 +175,16 @@ following:
 ![neighbour joining of same](compnb-img/2017-05-01_euc-nj-pass.svg)
 
 Seems as though the trees haven't changed much, we have just removed the
-samples that make no sense.
+samples that make no sense. Also worth noting that the NJ tree is fairly funky,
+particularly that mollucana that sticks out like the dog's proverbials...
+Though it's the same sample as the outlier in the hclust result, so it is
+probably topologically consistent, and just need re-rooting. I suspect J354 is
+also fairly crappy as samples go.
+
+
+#### 2017-05-02 update
+
+Fix up the colour scheme and now it looks heaps better (you can actually see
+the species)
+
+![PCA for the colourblind](compnb-img/2017-05-02_euc-pca-pass.svg)
