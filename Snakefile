@@ -147,3 +147,22 @@ rule freebayes:
         "   -O b"
         "   -o {output.bcf}"
         " ) >{log} 2>&1"
+
+
+rule angsd_plink:
+    input:
+        bams=expand("data/alignments/{{aligner}}/{{ref}}/{sample}.bam", sample=SAMPLES_NOBLANK),
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        tped="data/angsd/plink/{aligner}/{ref}/all-samples.tped"
+    threads: 16
+    shell:
+        "angsd "
+        "   -nThreads {threads}"
+        "   -bam <(echo {input})"
+        "   -out $(basename {output.tped} .tped)"
+        "   -ref {input.ref}"
+        "   -anc {input.ref}"
+        "   -GL 2 -doMajorMinor 1 -doGlf 2 -doMaf 2 -doGeno 4 -doPlink 2"
+        "   -skipTriallelic 1 -C 50 -baq 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-3 -doPost 1"
+
