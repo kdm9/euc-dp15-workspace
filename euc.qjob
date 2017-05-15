@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -q normal
 #PBS -l ncpus=16
-#PBS -l walltime=160:00:00
+#PBS -l walltime=48:00:00
 #PBS -l mem=31G
 #PBS -l jobfs=300G
 #PBS -l other=gdata1
@@ -15,10 +15,12 @@ source /g/data1/xe2/.profile
 export TMPDIR=$PBS_JOBFS
 
 module load snakemake adapterremoval nextgenmap samtools bcftools freebayes
+module load angsd plink mash khmer kwip
 
 snakemake --unlock
 
 snakemake                                \
+    --snakefile ${SNAKEFILE:-Snakefile}  \
     -j 16                                \
     --rerun-incomplete                   \
     >>data/log/snakemake.log 2>&1

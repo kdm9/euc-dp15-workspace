@@ -1,5 +1,6 @@
 configfile: "config.yml"
 
+
 rule all:
     input:
         expand("data/mash/k{ksize}-s{sketchsize}/{set}.dist",

@@ -2,11 +2,13 @@ configfile: "config.yml"
 
 rule all:
     input:
-        tped="data/angsd/ngm/grandis/nooutlier.tped"
+        tped="data/angsd/ngm/grandis/nooutlier.tped",
+
 
 rule angsd_plink:
     input:
-        bams=lambda wc: expand("data/alignments/{{aligner}}/{{ref}}/{sample}.bam",
+        bams=lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam",
+                               aligner=wc.aligner, ref=wc.ref,
                                sample=config["sample_sets"][wc.sampset]),
         ref=lambda wc: config['refs'][wc.ref],
     output:
