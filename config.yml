@@ -15,6 +15,7 @@ denovodist:
   ksize: 21
 
 sample_sets:
+
   noblank:
     - FDK10
     - J294
@@ -156,6 +157,7 @@ sample_sets:
     - VMA18
     - VMG14
     - VWG14
+
   nooutlier:
     - FDK10
     - J294

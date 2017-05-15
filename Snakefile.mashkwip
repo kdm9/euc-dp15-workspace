@@ -1,0 +1,76 @@
+configfile: "config.yml"
+
+rule all:
+    input:
+        expand("data/mash/k{ksize}-s{sketchsize}/{set}.dist",
+                ksize=config["denovodist"]["ksize"],
+                sketchsize=config["denovodist"]["mash_sketchsize"],
+                set=config["sample_sets"]),
+
+
+rule mashsketch:
+    input:
+        lambda wc: expand("data/reads/{sample}.fastq.gz",
+                          sample=config["sample_sets"][wc.set]),
+    output:
+        "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
+    log:
+        "data/log/mash/sketch/k{ksize}-s{sketchsize}-{set}.log"
+    threads: 16
+    shell:
+        " mash sketch"
+        "   -k {wildcards.ksize}"
+        "   -s {wildcards.sketchsize}"
+        "   -p {threads}"
+        "   -o $( basename {output} .msh)"
+        "   {input}"
+        " >{log} 2>&1"
+
+
+rule mash:
+    input:
+        "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
+    output:
+        dist="data/mash/k{ksize}-s{sketchsize}/{set}.mashdist",
+    log:
+        "data/log/mash/dist/k{ksize}-s{sketchsize}-{set}.log"
+    threads: 16
+    shell:
+        "mash dist"
+        "   -p {threads}"
+        "   {input} {input}" # needs it twice
+        " >{output}"
+        " 2>{log}"
+
+
+rule mashdist:
+    input:
+        "data/mash/k{ksize}-s{sketchsize}/{set}.mashdist"
+    output:
+        "data/mash/k{ksize}-s{sketchsize}/{set}.dist"
+    run:
+        from collections import defaultdict
+        from os.path import basename
+        def fname2id(fname):
+            fname = basename(fname)
+            exts = [".gz", ".fastq"]
+            for ext in exts:
+                if fname.endswith(ext):
+                    fname = fname[:-len(ext)]
+            return fname
+
+        dists = defaultdict(dict)
+        with open(input[0]) as fh:
+            for line in fh:
+                dist = line.strip().split('\t')
+                id1 = fname2id(dist[0])
+                id2 = fname2id(dist[1])
+                dist = float(dist[2])
+                dists[id1][id2] = dist
+
+        with open(output[0], 'w') as ofile:
+            ids = [''] + list(sorted(dists.keys()))
+            print(*ids, sep='\t', file=ofile)
+            for id1, row in sorted(dists.items()):
+                rowdists = [it[1] for it in sorted(row.items())]
+                print(id1, *rowdists, sep='\t', file=ofile)

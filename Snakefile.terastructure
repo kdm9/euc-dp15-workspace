@@ -1,0 +1,24 @@
+configfile: "config.yml"
+
+rule all:
+    input:
+        tped="data/angsd/ngm/grandis/nooutlier.tped"
+
+rule angsd_plink:
+    input:
+        bams=lambda wc: expand("data/alignments/{{aligner}}/{{ref}}/{sample}.bam",
+                               sample=config["sample_sets"][wc.sampset]),
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        tped="data/angsd/{aligner}/{ref}/{sampset}.tped"
+    threads: 8
+    shell:
+        "angsd "
+        "   -nThreads {threads}"
+        "   -bam <(echo {input})" # Takes file of file names
+        "   -out $(basename {output.tped} .tped)" # Takes basename
+        "   -ref {input.ref}"
+        "   -anc {input.ref}"
+        "   -GL 2 -doMajorMinor 1 -doGlf 2 -doMaf 2 -doGeno 4 -doPlink 2"
+        "   -skipTriallelic 1 -C 50 -baq 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-3 -doPost 1"
+
