@@ -184,7 +184,7 @@ sample_sets:
     - J330
     - J331
     - J333
-    - J333.plus
+    - J333-plus
     - J333a
     - J334
     - J335
@@ -196,14 +196,14 @@ sample_sets:
     - J343
     - J344
     - J345
-    - J345.plus
+    - J345-plus
     - J346
     - J347
     - J348
     - J349
     - J350
     - J351
-    - J351.plus
+    - J351-plus
     - J352
     - J353
     - J355
@@ -213,13 +213,13 @@ sample_sets:
     - J359
     - J360
     - J361
-    - J362.young
+    - J362-young
     - J363
-    - J363.plus
+    - J363-plus
     - J364
     - J365
     - J366
-    - J366.plus
+    - J366-plus
     - J367
     - J367i
     - J368
@@ -230,7 +230,7 @@ sample_sets:
     - J373
     - J374
     - J375
-    - J375.rep1
+    - J375-rep1
     - J376
     - J379
     - J381
