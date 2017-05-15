@@ -75,3 +75,49 @@ rule mashdist:
             for id1, row in sorted(dists.items()):
                 rowdists = [it[1] for it in sorted(row.items())]
                 print(id1, *rowdists, sep='\t', file=ofile)
+
+rule countsketch:
+    input:
+        "data/reads/{sample}.fastq.gz",
+    output:
+        ct="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz",
+        info="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz.info",
+        tsv="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz.info.tsv",
+    log:
+        "data/log/kwip/sketch/k{ksize}-s{sketchsize}-{sample}.log"
+    threads:
+        16
+    shell:
+        "load-into-counting.py"
+        "   -N 1"
+        "   -x {wildcards.sketchsize}"
+        "   -k {wildcards.ksize}"
+        "   -b"
+        "   -f"
+        "   -s tsv"
+        "   -T {threads}"
+        "   {output.ct}"
+        "   {input}"
+        " >{log} 2>&1"
+
+rule kwip:
+    input:
+        lambda wc: expand("data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz",
+                            ksize=wc.ksize, sketchsize=wc.sketchsize,
+                            sample=config["sample_sets"][wc.set]),
+    output:
+        d="data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
+        k="data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
+    log:
+        "data/log/kwip/dist/k{ksize}-s{sketchsize}-{set}.log"
+    benchmark:
+        "data/log/bench/kwip/dist/k{ksize}-s{sketchsize}-{set}.log"
+    threads:
+        16
+    shell:
+        "kwip"
+        " -d {output.d}"
+        " -k {output.k}"
+        " -t {threads}"
+        " {input}"
+        " >{log} 2>&1"
