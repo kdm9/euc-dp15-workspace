@@ -107,7 +107,7 @@ rule kwip:
                             sample=config["sample_sets"][wc.set]),
     output:
         d="data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
-        k="data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
+        k="data/kwip/k{ksize}-s{sketchsize}/{set}.kern",
     log:
         "data/log/kwip/dist/k{ksize}-s{sketchsize}-{set}.log"
     benchmark:
