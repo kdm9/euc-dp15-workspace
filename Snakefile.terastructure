@@ -1,9 +1,11 @@
 configfile: "config.yml"
 
+shell.executable = "/bin/bash"
+
 rule all:
     input:
         tped="data/angsd/ngm/grandis/nooutlier.tped",
-
+        bed="data/plink/ngm/grandis/nooutlier.bed",
 
 rule angsd_plink:
     input:
@@ -14,13 +16,35 @@ rule angsd_plink:
     output:
         tped="data/angsd/{aligner}/{ref}/{sampset}.tped"
     threads: 8
+    log: "data/log/angsd/{aligner}/{ref}/{sampset}.log"
     shell:
+        "bamf=$(mktemp); trap \"rm -f $bamf\" EXIT ; "
+        "echo {input.bams} | tr ' ' '\\n' > $bamf ; "
         "angsd "
-        "   -nThreads {threads}"
-        "   -bam <(echo {input})" # Takes file of file names
-        "   -out $(basename {output.tped} .tped)" # Takes basename
+        "   -P {threads}"
+        "   -bam $bamf" # Takes file of file names
+        "   -out data/angsd/{wildcards.aligner}/{wildcards.ref}/{wildcards.sampset}" # Takes basename
         "   -ref {input.ref}"
         "   -anc {input.ref}"
         "   -GL 2 -doMajorMinor 1 -doGlf 2 -doMaf 2 -doGeno 4 -doPlink 2"
         "   -skipTriallelic 1 -C 50 -baq 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-3 -doPost 1"
+        " >{log} 2>&1"
 
+# angsd -P 2 -bam All_noreps_bam.list -out All_noreps_Plink -ref $REF -anc $ANC
+# -GL 2 -doMajorMinor 1 -doGlf 2 -doMaf 2 -doGeno 4 -doPlink 2 -skipTriallelic 1
+# -C 50 -baq 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-3 -doPost 1
+
+
+rule plink_makebed:
+    input:
+        tped="data/angsd/{aligner}/{ref}/{sampset}.tped"
+    output:
+        bed="data/plink/{aligner}/{ref}/{sampset}.bed"
+    log: "data/log/plink/makebed/{aligner}/{ref}/{sampset}.log"
+    shell:
+        "plink "
+        "   --allow-extra-chr"
+        "   --make-bed"
+        "    --tfile data/angsd/{wildcards.aligner}/{wildcards.ref}/{wildcards.sampset}"
+        "    --out data/plink/{wildcards.aligner}/{wildcards.ref}/{wildcards.sampset}"
+        " >{log} 2>&1"
