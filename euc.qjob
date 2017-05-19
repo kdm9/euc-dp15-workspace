@@ -23,4 +23,4 @@ snakemake                                \
     --snakefile ${SNAKEFILE:-Snakefile}  \
     -j 16                                \
     --rerun-incomplete                   \
-    >>data/log/`isodate`_${PBS_JOBNAME}-snakemake.log 2>&1
+    >>data/log/`date +%Y-%m-%d`_${PBS_JOBNAME}-snakemake.log 2>&1

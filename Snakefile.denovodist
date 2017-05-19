@@ -7,6 +7,10 @@ rule all:
                 ksize=config["denovodist"]["ksize"],
                 sketchsize=config["denovodist"]["mash_sketchsize"],
                 set=config["sample_sets"]),
+        expand("data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
+                ksize=config["denovodist"]["ksize"],
+                sketchsize=config["denovodist"]["kwip_sketchsize"],
+                set=config["sample_sets"]),
 
 
 rule mashsketch:
