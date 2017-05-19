@@ -54,7 +54,7 @@ rule mashdist:
         from os.path import basename
         def fname2id(fname):
             fname = basename(fname)
-            exts = [".gz", ".fastq"]
+            exts = [".gz", ".fastq", ".fq"]
             for ext in exts:
                 if fname.endswith(ext):
                     fname = fname[:-len(ext)]
