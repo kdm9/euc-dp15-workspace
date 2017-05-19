@@ -23,7 +23,7 @@ rule mashsketch:
         "   -k {wildcards.ksize}"
         "   -s {wildcards.sketchsize}"
         "   -p {threads}"
-        "   -o $( basename {output} .msh)"
+        "   -o data/mash/k{wildcards.ksize}-s{wildcards.sketchsize}/{wildcards.set}"
         "   {input}"
         " >{log} 2>&1"
 
