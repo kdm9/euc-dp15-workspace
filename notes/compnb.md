@@ -3,6 +3,118 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
+# 2017-05-10 -- Get outlier set of samples
+
+Find the means across all pairwise distances for all samples. Mask this at some
+point such that J354 isn't included in the analysis (this being the odd outlier
+mollucana). That ended up being at mean pairwise dist of 0.07.
+
+```R
+
+m = as.matrix(read.delim("data/2017-04-27_mash-euc-k21-s10000.dist", row.names=1))
+d = as.dist(m)
+cm = colMeans(m)
+cmok = cm[cm < 0.07]
+
+cat(names(cmok), sep="\n", file="data/2017-05-10_samples-pi-0.07.txt")
+
+```
+
+Also, do one at $\pi$ of 0.10, which includes the dodgy molluncana (J354) but
+none of the really massive outliers driven by coverage.
+
+```R
+
+cmok = cm[cm < 0.1]
+cat(names(cmok), sep="\n", file="data/2017-05-10_samples-pi-0.10.txt")
+
+```
+
+
+I also read directly off the tree the samples that I though had failed, namely
+J354, and the three outlier clades previously shown to be mostly coverage
+based. These are in `data/2017-05-10_samples-bad-from-reading-tree.txt`.
+All samples minus this list are the sample set that we'll keep for now, under
+`data/2017-05-10_samples-good.txt`.
+
+```R
+cbad = read.delim("./data/2017-05-10_samples-bad-from-reading-tree.txt",
+				  header=F, stringsAsFactors=F)$V1
+good = setdiff(all, cbad)
+cat(good, sep="\n", file="data/2017-05-10_samples-good.txt")
+```
+
+
+
+# 2017-05-01 -- Redoing the PCA visualisation
+
+By eye, the mash tree seemed to suggest that the major axes of variation were
+coverage driven. That lead me to plot PC1 against coverage:
+
+![PC1 vs Coverage](data/2017-05-01_euc-pc1-cov.svg)
+
+Looks like PC1 is pretty coverage driven, especially at the low end.
+Re-plotting the PCA without the crappy samples (coverage $\ge 1.5$x) gives the
+following:
+
+![PCA of well-covered samples](data/2017-05-01_euc-pca-pass.svg)
+
+![hclust of same](data/2017-05-01_euc-dendro-pass.svg)
+
+![neighbour joining of same](data/2017-05-01_euc-nj-pass.svg)
+
+Seems as though the trees haven't changed much, we have just removed the
+samples that make no sense. Also worth noting that the NJ tree is fairly funky,
+particularly that mollucana that sticks out like the dog's proverbials...
+Though it's the same sample as the outlier in the hclust result, so it is
+probably topologically consistent, and just need re-rooting. I suspect J354 is
+also fairly crappy as samples go.
+
+
+#### 2017-05-02 update
+
+Fix up the colour scheme and now it looks heaps better (you can actually see
+the species)
+
+![PCA for the colourblind](data/2017-05-02_euc-pca-pass.svg)
+
+
+
+# 2017-04-27 -- Mash re-run
+
+Did a re-run of the MASH tree with k=21 and sketch size of 10000. This one
+includes all the samples off plate 2, sans the blanks (and without merging tech
+reps).
+
+![**Mash tree (via hclust).**](data/2017-04-27_euc-dendro.svg)
+
+However, the mash tree does raise a couple of issues:
+
+- The deepest branches seem to split off samples that were not collected by
+  Jasmine (voucher nums not starting with J, I assume)
+- There are a few samples without species annotation, meaning they're not in
+  the metadata
+
+![**PCoA of mash.**
+The PCoA of mash is a bit funky. The number of distinct colours isn't that
+high, it probably would look better plotted coloured by series rather than
+spp](data/2017-04-27_euc-pca.svg)
+
+
+
+# 2017-04-27 -- Metadata clean up
+
+Read metadata into R notebook (in `edmund:ws/euc/metadata`). The Species column
+had a bunch of odd stuff in it, typos mostly, and a few question marks that
+I've removed for now. I have cleaned it up and output it as a CSV for use in
+other places. The original species column is in there as `species.orig`.
+
+However, It's missing the "series" or whatever taxonomic rank the various
+supra-specific groups are. Need to get this off Rose/Jaz.
+
+
+
+
 # 2017-04-23 -- Identify adapter sequences
 
 Identifying adapters. Used command:
@@ -120,71 +232,3 @@ the `--adapter2` is the reverse compliment of what is on that site.
 
 I did this with Norman's IAEA sequencing runs (done the same way) and got
 exactly the same answer, so this is definitely solid.
-
-
-
-# 2017-04-27 -- Mash re-run
-
-Did a re-run of the MASH tree with k=21 and sketch size of 10000. This one
-includes all the samples off plate 2, sans the blanks (and without merging tech
-reps).
-
-![**Mash tree (via hclust).**](compnb-img/2017-04-27_euc-dendro.svg)
-
-However, the mash tree does raise a couple of issues:
-
-- The deepest branches seem to split off samples that were not collected by
-  Jasmine (voucher nums not starting with J, I assume)
-- There are a few samples without species annotation, meaning they're not in
-  the metadata
-
-![**PCoA of mash.**
-The PCoA of mash is a bit funky. The number of distinct colours isn't that
-high, it probably would look better plotted coloured by series rather than
-spp](compnb-img/2017-04-27_euc-pca.svg)
-
-
-
-# 2017-04-27 -- Metadata clean up
-
-Read metadata into R notebook (in `edmund:ws/euc/metadata`). The Species column
-had a bunch of odd stuff in it, typos mostly, and a few question marks that
-I've removed for now. I have cleaned it up and output it as a CSV for use in
-other places. The original species column is in there as `species.orig`.
-
-However, It's missing the "series" or whatever taxonomic rank the various
-supra-specific groups are. Need to get this off Rose/Jaz.
-
-
-
-# 2017-05-01 -- Redoing the PCA visualisation
-
-By eye, the mash tree seemed to suggest that the major axes of variation were
-coverage driven. That lead me to plot PC1 against coverage:
-
-![PC1 vs Coverage](compnb-img/2017-05-01_euc-pc1-cov.svg)
-
-Looks like PC1 is pretty coverage driven, especially at the low end.
-Re-plotting the PCA without the crappy samples (coverage $\ge 1.5$x) gives the
-following:
-
-![PCA of well-covered samples](compnb-img/2017-05-01_euc-pca-pass.svg)
-
-![hclust of same](compnb-img/2017-05-01_euc-dendro-pass.svg)
-
-![neighbour joining of same](compnb-img/2017-05-01_euc-nj-pass.svg)
-
-Seems as though the trees haven't changed much, we have just removed the
-samples that make no sense. Also worth noting that the NJ tree is fairly funky,
-particularly that mollucana that sticks out like the dog's proverbials...
-Though it's the same sample as the outlier in the hclust result, so it is
-probably topologically consistent, and just need re-rooting. I suspect J354 is
-also fairly crappy as samples go.
-
-
-#### 2017-05-02 update
-
-Fix up the colour scheme and now it looks heaps better (you can actually see
-the species)
-
-![PCA for the colourblind](compnb-img/2017-05-02_euc-pca-pass.svg)
