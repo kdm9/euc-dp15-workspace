@@ -8,7 +8,10 @@ collection = read.csv("cleaned/collection_metadata.csv", stringsAsFactors=F)
 series = read.csv("orig/pop_IDs_noreps.csv", stringsAsFactors=F)
 
 series = series %>%
-        mutate(indiv = sub('^(\\d+)', 'J\\1', indiv))
+        mutate(indiv = sub('^(\\d+)', 'J\\1', indiv),
+                species = sub(' ', '', species),
+                sp.short = sub(' ', '', sp.short),
+                indiv = sub('_', '-', indiv))
 
 joined = right_join(collection, series, by=c("ID"="indiv")) %>%
         select(-stampy, -bwa)
