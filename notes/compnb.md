@@ -3,6 +3,51 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
+# 2017-05-22 -- Fixing up more metadata
+
+This pulls in the "metadata" spreadsheet
+
+# 2017-05-22 -- kWIP results
+
+... finally.
+
+```R
+library(ggplot2)
+library(tidyverse)
+library(Cairo)
+library(ape)
+library(RColorBrewer)
+
+col = c(brewer.pal(12, "Paired"), 'black', '#666666', 'blue', 'pink')
+
+m = as.matrix(read.delim("data/2017-05-22_kwip-k21-s1e9/nooutlier.dist", row.names=1))
+d = as.dist(m)
+```
+
+
+```R
+meta = read.csv("data/clean_metadata.csv")
+meta = meta[match(rownames(m), meta$ID),]
+```
+
+```R
+pc = cmdscale(d, k=9, eig=T)
+pctcontrib = pc$eig / sum(pc$eig)
+pc = pc$points
+pc.df = data.frame(PC1=pc[,1], PC2=pc[,2], ID=rownames(pc)) %>%
+        inner_join(meta, by="ID")
+
+
+```R
+p = ggplot(pc.df, aes(x=PC1, y=PC2)) +
+    geom_point(aes(colour=Species), size=3) +
+    xlab(paste0("PC1 (", round(pctcontrib[1] * 100, 1), "%)")) + 
+    ylab(paste0("PC2 (", round(pctcontrib[2] * 100, 1), "%)")) + 
+    scale_color_manual(values = col) +
+    theme_bw()
+```
+
+
 # 2017-05-10 -- Get outlier set of samples
 
 Find the means across all pairwise distances for all samples. Mask this at some
@@ -65,10 +110,9 @@ following:
 
 Seems as though the trees haven't changed much, we have just removed the
 samples that make no sense. Also worth noting that the NJ tree is fairly funky,
-particularly that mollucana that sticks out like the dog's proverbials...
-Though it's the same sample as the outlier in the hclust result, so it is
-probably topologically consistent, and just need re-rooting. I suspect J354 is
-also fairly crappy as samples go.
+particularly that mollucana that sticks out. Though it's the same sample as the
+outlier in the hclust result, so it is probably topologically consistent, and
+just need re-rooting. I suspect J354 is also fairly crappy as samples go.
 
 
 #### 2017-05-02 update
