@@ -1,0 +1,117 @@
+indiv,state,location,sp.short,species,ser.short,series,stampy,bwa
+294,NSW,Keepit,alb ,albens ,bux,buxeales,yes,yes
+303,NSW,Sawn Rocks,alb ,albens ,bux,buxeales,yes,yes
+341,NSW,Yellow Dam,alb ,albens ,bux,buxeales,yes,yes
+345,NSW,Mullion,alb ,albens ,bux,buxeales,yes,yes
+349,NSW,Wee Jasper,alb ,albens ,bux,buxeales,yes,yes
+350,NSW,Tarcutta,alb ,albens ,bux,buxeales,yes,yes
+361,NSW,Nangar,alb ,albens ,bux,buxeales,yes,yes
+374,VIC,Ensay,alb ,albens ,bux,buxeales,yes,yes
+376,VIC,McKillop Bridge,alb ,albens ,bux,buxeales,yes,yes
+393,VIC,Heathcote,alb ,albens ,bux,buxeales,yes,yes
+413,NSW,Boggabri,alb ,albens ,bux,buxeales,yes,yes
+414,NSW,Narrabri,alb ,albens ,bux,buxeales,yes,yes
+419,NSW,Warrumbungle,alb ,albens ,bux,buxeales,yes,yes
+424,NSW,Ardglen,alb ,albens ,bux,buxeales,yes,yes
+RA1006,NSW,Bundarra,alb ,albens ,bux,buxeales,yes,yes
+395,VIC,Woodstock on Loddon,albXmic,albensXmicrocarpa,bux,buxeales,yes,yes
+335,NSW,Texas,mic,microcarpa,bux,buxeales,yes,yes
+363,NSW,Eugowra,mic,microcarpa,bux,buxeales,yes,yes
+FDK10,VIC,Dookie,mic,microcarpa,bux,buxeales,yes,yes
+NAL05,NSW,Melrose,mic,microcarpa,bux,buxeales,yes,yes
+NBJ30,NSW,Berry Jerry,mic,microcarpa,bux,buxeales,yes,yes
+NCD30,NSW,Condobolin,mic,microcarpa,bux,buxeales,yes,yes
+NCR13,NSW,Crowther,mic,microcarpa,bux,buxeales,yes,yes
+NDU10,NSW,Dubbo,mic,microcarpa,bux,buxeales,yes,yes
+VMA18,VIC,Mt Aprapiles,mic,microcarpa,bux,buxeales,yes,yes
+VWG14,VIC,Werribee,mic,microcarpa,bux,buxeales,yes,yes
+320,NSW,Timor,mol,moluccana,bux,buxeales,yes,yes
+326,QLD,Rathdowney,mol,moluccana,bux,buxeales,yes,yes
+328,NSW,Legume,mol,moluccana,bux,buxeales,yes,yes
+334,QLD,Inglewood,mol,moluccana,bux,buxeales,yes,yes
+339,NSW,Emmaville,mol,moluccana,bux,buxeales,yes,yes
+354,NSW,Blue Metal,mol,moluccana,bux,buxeales,yes,yes
+412,NSW,Moonbi,mol,moluccana,bux,buxeales,yes,yes
+420,NSW,Warrumbungle,mol,moluccana,bux,buxeales,yes,yes
+423,NSW,Coolah,mol,moluccana,bux,buxeales,yes,yes
+NE-odo,SA,SA,odo,odorata,bux,buxeales,yes,yes
+310,NSW,Narrabri,pop,populnea,bux,buxeales,yes,yes
+NE-por,SA,SA,por,porosa,bux,buxeales,yes,yes
+NE-wool,NSW,NSW,wool,woolsiana,bux,buxeales,yes,yes
+324,NSW,Wollomi,con,conica,hetero,heterophloiae,yes,yes
+329,NSW,Legume,con,conica,hetero,heterophloiae,yes,yes
+338,NSW,Tenterfield,con,conica,hetero,heterophloiae,yes,yes
+360,NSW,Orange,con,conica,hetero,heterophloiae,yes,yes
+364,NSW,Eugowra,con,conica,hetero,heterophloiae,yes,yes
+TLC715,QLD,Storm King,con,conica,hetero,heterophloiae,yes,yes
+TLC720,NSW,Tenterfield ,con,conica,hetero,heterophloiae,yes,yes
+TLC725,NSW,Dundee,con,conica,hetero,heterophloiae,yes,yes
+TLC726,NSW,Abington,con,conica,hetero,heterophloiae,yes,yes
+TLC775,QLD,Inglewood ,con,conica,hetero,heterophloiae,yes,yes
+344,ACT,Pierces Creek,poly,polyanthemos,hetero,heterophloiae,yes,yes
+347,NSW,Wee Jasper,poly,polyanthemos,hetero,heterophloiae,yes,yes
+348,NSW,Wee Jasper,poly,polyanthemos,hetero,heterophloiae,yes,yes
+351,NSW,Tarcutta,poly,polyanthemos,hetero,heterophloiae,yes,yes
+353,NSW,Blue Metal,poly,polyanthemos,hetero,heterophloiae,yes,yes
+372,VIC,Licola,poly,polyanthemos,hetero,heterophloiae,yes,yes
+379,VIC,Bombala,poly,polyanthemos,hetero,heterophloiae,yes,yes
+381,VIC,Bruthen,poly,polyanthemos,hetero,heterophloiae,yes,yes
+383,VIC,Yambuck,poly,polyanthemos,hetero,heterophloiae,yes,yes
+389,VIC,Reef Road,poly,polyanthemos,hetero,heterophloiae,yes,yes
+397,VIC,Dergholm,leuc,leucoxylon,mellio,melliodorae,yes,no
+398,VIC,Cherrypool,leuc,leucoxylon,mellio,melliodorae,yes,yes
+399,VIC,Castlemaine,leuc,leucoxylon,mellio,melliodorae,yes,yes
+296,NSW,Namoi River,mel,melliodora,mellio,melliodorae,yes,yes
+318,NSW,Chaffey Dam,mel,melliodora,mellio,melliodorae,yes,yes
+319,NSW,Nundle,mel,melliodora,mellio,melliodorae,yes,yes
+340,NSW,Emmaville,mel,melliodora,mellio,melliodorae,yes,yes
+346,NSW,Mullion,mel,melliodora,mellio,melliodorae,yes,yes
+357,NSW,Collendina,mel,melliodora,mellio,melliodorae,yes,yes
+358,NSW,Urana,mel,melliodora,mellio,melliodorae,yes,yes
+365,NSW,Gelnwood,mel,melliodora,mellio,melliodorae,yes,yes
+373,VIC,Doctors Flat,mel,melliodora,mellio,melliodorae,yes,yes
+375,VIC,Buchan,mel,melliodora,mellio,melliodorae,yes,yes
+M1a,NSW,Yeoval,mel,melliodora,mellio,melliodorae,yes,yes
+M1b,NSW,Yeoval,mel,melliodora,mellio,melliodorae,no,yes
+M1c,NSW,Yeoval,mel,melliodora,mellio,melliodorae,yes,yes
+298,NSW,Bundarra,sider,sideroxylon,mellio,melliodorae,yes,yes
+301,NSW,Gum Flat,sider,sideroxylon,mellio,melliodorae,yes,yes
+342,NSW,Yellow Dam,sider,sideroxylon,mellio,melliodorae,yes,yes
+352,NSW,Tarcutta,sider,sideroxylon,mellio,melliodorae,yes,yes
+355,VIC,Chiltern,sider,sideroxylon,mellio,melliodorae,yes,yes
+359,NSW,Ingalba,sider,sideroxylon,mellio,melliodorae,yes,yes
+367,NSW,Uralla,sider,sideroxylon,mellio,melliodorae,yes,yes
+385,VIC,Chiltern,sider,sideroxylon,mellio,melliodorae,yes,yes
+387,VIC,Warrangatta,sider,sideroxylon,mellio,melliodorae,yes,yes
+401,NSW,Yarrowyck,sider,sideroxylon,mellio,melliodorae,yes,yes
+416,NSW,Weewaa,sider,sideroxylon,mellio,melliodorae,yes,yes
+418,NSW,Pilliga,sider,sideroxylon,mellio,melliodorae,yes,yes
+421,NSW,Narromine,sider,sideroxylon,mellio,melliodorae,yes,yes
+422,NSW,Dubbo,sider,sideroxylon,mellio,melliodorae,yes,yes
+362_young,NSW,Nangar,sider,sideroxylon,mellio,melliodorae,yes,yes
+353b,NSW,Blue Metal,sidXmic,sideroxylonXmicrocarpa,mellio,melliodorae,yes,yes
+367i,NSW,Uralla,sidXmol,sideroxylonXmoluccana,mellio,melliodorae,yes,yes
+392,VIC,Puckapanyl,tri,tricarpa,mellio,melliodorae,yes,yes
+333,QLD,Inglewood,cal,caleyi,rhodox,rhodoxylon,yes,yes
+368,NSW,Kingstown,cal,caleyi,rhodox,rhodoxylon,yes,yes
+369,NSW,Bundarra,cal,caleyi,rhodox,rhodoxylon,yes,yes
+427,NSW,Bundarra,cal,caleyi,rhodox,rhodoxylon,yes,yes
+333a,QLD,Inglewood,cal,caleyi,rhodox,rhodoxylon,yes, yes
+427a,NSW,Bundarra,cal,caleyi,rhodox,rhodoxylon,yes,yes
+307,NSW,Narrabri,creb,crebra,sider,siderophloiae,yes,yes
+316,NSW,Pilliga,creb,crebra,sider,siderophloiae,yes,yes
+317,NSW,Sawn Rocks,creb,crebra,sider,siderophloiae,yes,yes
+327,NSW,Koreelah,creb,crebra,sider,siderophloiae,yes,yes
+331,QLD,Gore,creb,crebra,sider,siderophloiae,yes,yes
+343,NSW,Yellow Dam,creb,crebra,sider,siderophloiae,yes,yes
+417,NSW,Weewaa,creb,crebra,sider,siderophloiae,yes,yes
+431,NSW,Inglewood,creb,crebra,sider,siderophloiae,yes,yes
+321g,NSW,Polkobin,creb,crebra,sider,siderophloiae,yes,yes
+311,NSW,Pilliga,fib,fibrosa,sider,siderophloiae,yes,yes
+315,NSW,Pilliga,fib,fibrosa,sider,siderophloiae,yes,yes
+322,NSW,Polkobin,fib,fibrosa,sider,siderophloiae,yes,yes
+330,QLD,Karara,fib,fibrosa,sider,siderophloiae,yes,yes
+366,NSW,Gardens of Stone,fib,fibrosa,sider,siderophloiae,yes,yes
+370,NSW,Stroud,fib,fibrosa,sider,siderophloiae,yes,yes
+371,NSW,Wards River,fib,fibrosa,sider,siderophloiae,yes,yes
+432,NSW,Glendon,fib,fibrosa,sider,siderophloiae,yes,yes
