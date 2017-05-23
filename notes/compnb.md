@@ -3,13 +3,10 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
-# 2017-05-22 -- Fixing up more metadata
+# 2017-05-22 -- kWIP (& Mash) results
 
-This pulls in the "metadata" spreadsheet
-
-# 2017-05-22 -- kWIP results
-
-... finally.
+I've finally re-done the kWIP and mash results based on the non-outlier
+samples.
 
 ```R
 library(ggplot2)
@@ -22,30 +19,113 @@ col = c(brewer.pal(12, "Paired"), 'black', '#666666', 'blue', 'pink')
 
 m = as.matrix(read.delim("data/2017-05-22_kwip-k21-s1e9/nooutlier.dist", row.names=1))
 d = as.dist(m)
-```
 
-
-```R
-meta = read.csv("data/clean_metadata.csv")
+meta = read.csv("../metadata/cleaned/metadata.csv", stringsAsFactors=F)
 meta = meta[match(rownames(m), meta$ID),]
 ```
+
+
+#### PCoA on kWIP dist mat
+
+We use PCoA/Classic MDS as this is required for mash (mash distances aren't
+guaranteed to be euclidean), and mathematically identical to PCA with kWIP's
+euclidean distances.
 
 ```R
 pc = cmdscale(d, k=9, eig=T)
 pctcontrib = pc$eig / sum(pc$eig)
 pc = pc$points
 pc.df = data.frame(PC1=pc[,1], PC2=pc[,2], ID=rownames(pc)) %>%
-        inner_join(meta, by="ID")
+        left_join(meta, by="ID")
 
+svg("data/2017-05-22_kwip-scree.svg")
+plot(cumsum(pctcontrib), type='lp', main="Scree plot (kWIP)", xlab="PC",
+        ylab="Proportion of variance (culmulative)")
+dev.off()
+```
+
+![**Scree plot for kWIP**. The data seems quite high-dimensional, there's not
+a sharp decrease in variance explained](data/2017-05-22_kwip-scree.svg)
+
+#### PCA By Species
 
 ```R
 p = ggplot(pc.df, aes(x=PC1, y=PC2)) +
-    geom_point(aes(colour=Species), size=3) +
-    xlab(paste0("PC1 (", round(pctcontrib[1] * 100, 1), "%)")) + 
-    ylab(paste0("PC2 (", round(pctcontrib[2] * 100, 1), "%)")) + 
+    geom_point(aes(colour=species), size=3) +
+    xlab(paste0("PC1 (", round(pctcontrib[1] * 100, 1), "%)")) +
+    ylab(paste0("PC2 (", round(pctcontrib[2] * 100, 1), "%)")) +
     scale_color_manual(values = col) +
     theme_bw()
+svg('data/2017-05-22_kwip-pca-spp.svg', width=7, height=5)
+print(p)
+dev.off()
 ```
+
+![](data/2017-05-22_kwip-pca-spp.svg)
+
+#### PCA by series
+
+```R
+p = ggplot(pc.df, aes(x=PC1, y=PC2)) +
+    geom_point(aes(colour=series), size=3) +
+    xlab(paste0("PC1 (", round(pctcontrib[1] * 100, 1), "%)")) +
+    ylab(paste0("PC2 (", round(pctcontrib[2] * 100, 1), "%)")) +
+    scale_color_brewer(palette="Paired") +
+    theme_bw()
+svg('data/2017-05-22_kwip-pca-series.svg', width=7, height=5)
+print(p)
+dev.off()
+```
+
+![](data/2017-05-22_kwip-pca-series.svg)
+
+#### PCA of Mash by series
+
+```R
+m = as.matrix(read.delim("data/2017-05-22_mash-k21-s1e5/nooutlier.dist", row.names=1))
+d = as.dist(m)
+
+meta = read.csv("../metadata/cleaned/metadata.csv", stringsAsFactors=F)
+meta = meta[match(rownames(m), meta$ID),]
+
+pc = cmdscale(d, k=9, eig=T)
+pctcontrib = pc$eig / sum(pc$eig)
+pc = pc$points
+pc.df = data.frame(PC1=pc[,1], PC2=pc[,2], ID=rownames(pc)) %>%
+        left_join(meta, by="ID")
+
+svg("data/2017-05-22_mash-scree.svg")
+plot(cumsum(pctcontrib), type='lp', main="Scree plot (Mash)", xlab="PC",
+        ylab="Proportion of variance (culmulative)")
+dev.off()
+
+p = ggplot(pc.df, aes(x=PC1, y=PC2)) +
+    geom_point(aes(colour=series), size=3) +
+    xlab(paste0("PC1 (", round(pctcontrib[1] * 100, 1), "%)")) +
+    ylab(paste0("PC2 (", round(pctcontrib[2] * 100, 1), "%)")) +
+    scale_color_brewer(palette="Paired") +
+    theme_bw()
+svg('data/2017-05-22_mash-pca-series.svg', width=7, height=5)
+print(p)
+dev.off()
+
+p = ggplot(pc.df, aes(x=PC1, y=PC2)) +
+    geom_point(aes(colour=species), size=3) +
+    xlab(paste0("PC1 (", round(pctcontrib[1] * 100, 1), "%)")) +
+    ylab(paste0("PC2 (", round(pctcontrib[2] * 100, 1), "%)")) +
+    scale_color_manual(values = col) +
+    theme_bw()
+svg('data/2017-05-22_mash-pca-spp.svg', width=7, height=5)
+print(p)
+dev.off()
+```
+
+![**Scree plot for Mash**. It's not just kWIP, the mash distance matrix is also
+quite high-dimensional.](data/2017-05-22_mash-scree.svg)
+
+![By Series](data/2017-05-22_mash-pca-series.svg)
+
+![By Species](data/2017-05-22_mash-pca-spp.svg)
 
 
 # 2017-05-10 -- Get outlier set of samples
