@@ -3,6 +3,68 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
+# 2017-05-23 -- Terastructure tests
+
+To run a simple test, I ran the following (from the root Snakemake directory).
+
+```bash
+for k in {2..11}
+do
+    terastructure  -label ts-test \
+        -bed data/plink/ngm/grandis/nooutlier.bed \
+        -k $k -nthreads 16
+done
+```
+
+This created a bunch of files, copied to `data/2017-05-23_terastructure-test/`.
+
+Let's plot these.
+
+```R
+ts = NULL
+for (k in 2:11) {
+    fn = paste0("data/2017-05-23_terastructure-test/n123-k", k, "-l8579612/theta.txt")
+    d <- read.delim(fn, header=F)
+    d <- d[,-ncol(d)] # The last column is always empty
+    d$indiv <- 1:nrow(d)
+    d <- gather(d, "popn", "theta", -indiv) %>%
+            mutate(popn = sub("^V", "", popn),
+                k=k,
+                indiv=as.factor(indiv))
+    ts <- bind_rows(ts, d)
+}
+
+p = ggplot(ts, aes(x=indiv, y=theta, fill=popn, colour=popn)) +
+    geom_bar(stat="identity") +
+    facet_wrap(~k, ncol=1) +
+    scale_fill_brewer("Popn.", palette="Paired") +
+    scale_colour_brewer("Popn.", palette="Paired") +
+    labs(y="Proportion", x="Indiviual") +
+    theme_bw() +
+    theme(axis.text.x=element_text(angle=90, hjust=1))
+
+svg("data/2017-05-23_terastructure.svg", width=8, height=12)
+print(p)
+dev.off()
+```
+
+![Terastructure "result"](data/2017-05-23_terastructure.svg)
+
+What the hell!?!
+
+I only explanations I can come up with for this is, a), a bug, or b), user
+error. I've read the rather spartan docs, and I can't see how I'm doing this
+wrong (naturally). I need to re-familiarise myself with the mathematics of
+their take on the PSD model, and dig into the associated validation files to
+see if there are any clues there. It seems as though the model could be getting
+stuck in some initial state for $3 < k \le 11$.
+
+I'm not encouraged by the fact that I had to fix a very obvious bug that would
+have prevented anyone from using or testing terastructure with plink files. It
+makes me thing that, a), I'm the first person to use this feature in a while,
+and b), there are quite possibly less obvious bugs lurking here.
+
+
 # 2017-05-22 -- kWIP (& Mash) results
 
 I've finally re-done the kWIP and mash results based on the non-outlier
