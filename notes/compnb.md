@@ -3,6 +3,40 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
+# 2017-05-24 -- Plotting read stats
+
+```R
+library(tidyverse)
+library(ggplot2)
+library(Cairo)
+
+reads = read.delim("data/2017-05-24_readstats/readnum.tsv") %>%
+    mutate(samp = sub("data/reads/(.+)\\.fastq\\.gz", "\\1", filename),
+           cov = bases / 6e8) %>%
+    select(-filename)
+kmers = read.delim("data/2017-05-24_readstats/unique-kmers.tsv") %>%
+    mutate(samp = sub("data/reads/(.+)\\.fastq\\.gz", "\\1", filename)) %>%
+    select(-filename)
+data = full_join(reads, kmers, by="samp")
+
+p = ggplot(data, aes(x=cov, y=unique_kmers)) +
+    geom_point() +
+    theme_bw()
+
+svg("data/2017-04-24_readstats.svg")
+print(p)
+dev.off()
+```
+
+![Coverage vs unique kmers](data/2017-04-24_readstats.svg)
+
+From this we can see that coverage alone would be a pretty good determinant of
+sampling quality. If there were low complexity libraries, we would see these
+below the main curve. Based on this, I think we're good to pool samples
+together, even if the replicates or individuals are not sufficiently covered on
+their own (note this is NOT what's been done below for kWIP/mash).
+
+
 # 2017-05-23 -- Terastructure tests
 
 To run a simple test, I ran the following (from the root Snakemake directory).
