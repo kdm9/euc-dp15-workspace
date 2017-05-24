@@ -143,6 +143,10 @@ EOS
 done
 ```
 
+**None** of these combinations seem to have done anything to fix this. I think
+I may need to make an issue on their github.
+
+
 # 2017-05-22 -- kWIP (& Mash) results
 
 I've finally re-done the kWIP and mash results based on the non-outlier
