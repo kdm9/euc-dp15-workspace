@@ -64,6 +64,50 @@ have prevented anyone from using or testing terastructure with plink files. It
 makes me thing that, a), I'm the first person to use this feature in a while,
 and b), there are quite possibly less obvious bugs lurking here.
 
+#### Rerun with different parameters
+
+Increased the rfreq parameter to 100000, and not much changed.
+
+```bash
+for k in {2..11}
+do
+    terastructure  -label rfreq100k \
+        -rfreq 100000 \
+        -bed data/plink/ngm/grandis/nooutlier.bed \
+        -k $k -nthreads 16
+done
+```
+
+Reading the wiki, this should be 5-20% of the number of SNPs. Since that's more
+than 100k, doing 3Mil which is ~20% of the ~10M SNPs.
+
+```bash
+for k in {2..11}
+do
+    terastructure  -label rfreq3M \
+        -rfreq 3000000 \
+        -bed data/plink/ngm/grandis/nooutlier.bed \
+        -k $k -nthreads 16
+done
+```
+
+That timed out, so re-doing with smaller rfreq and using qsub.
+
+```bash
+for k in {2..11}
+do
+
+qsub -l ncpus=16,mem=31G,walltime=18:00:00,wd -q express -N ts-$k -P xe2 <<EOS
+module load terastructure;
+
+terastructure \
+     -label rfreq2M \
+     -rfreq 2000000 \
+     -bed data/plink/ngm/grandis/nooutlier.bed \
+     -k $k -nthreads 16
+EOS
+done
+```
 
 # 2017-05-22 -- kWIP (& Mash) results
 
