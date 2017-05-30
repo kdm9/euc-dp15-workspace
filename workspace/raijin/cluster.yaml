@@ -10,13 +10,21 @@ qcreads:
 readstats:
   time: '0:10:00'
 
-
 ngmap:
   time: '6:00:00'
+
+bwamem:
+  time: '8:00:00'
 
 mergebam:
   time: '4:00:00'
 
-freebayes:
+freebayes_ful:
   time: '160:00:00'
   jobfs: 400G
+
+freebayes:
+  time: '5:00:00'
+
+mpileup:
+  time: '3:00:00'

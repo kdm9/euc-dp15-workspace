@@ -1,0 +1,128 @@
+configfile: "config.yml"
+
+def make_regions(rdict, window=1e6):
+    window = int(window)
+    ret = {}
+    for refname, refpath in rdict.items():
+        fai = refpath+".fai"
+        windows = []
+        with open(fai) as fh:
+            def parsel(l):
+                cname, clen, _, _, _ = l.split()
+                clen = int(clen)
+                return cname, clen
+            curwin = []
+            curwinlen = 0
+            for cname, clen in map(parsel, fh):
+                if clen < window:
+                    curwinlen += clen
+                    curwin.append(cname)
+                    if curwinlen > window:
+                        windows.append(curwin)
+                        curwin = []
+                        curwinlen = 0
+                else:
+                    for start in range(0, clen, window):
+                        wlen = min(clen - start, window)
+                        windows.append(["{}:{}-{}".format(cname, start, start+wlen)])
+            if len(curwin) > 0:
+                windows.append(curwin)
+
+        ref = dict()
+        for i, w in enumerate(windows):
+            wname = "W{:05d}".format(i)
+            ref[wname]=w
+        ret[refname] = ref
+        print(refname, "has", len(ref), "windows")
+    return ret
+
+REGIONS = make_regions(config["refs"], window=config["varcall"]["chunksize"])
+
+rule all:
+    input:
+        expand("data/variants/{caller}/{aligner}/{ref}.bcf",
+               caller=config["varcall"]["callers"],
+               aligner=config["varcall"]["aligners"],
+               ref=config["varcall"]["genomes"]),
+
+
+rule freebayes:
+    input:
+        bam="data/alignments/{aligner}/{ref}_merged.bam",
+        bai="data/alignments/{aligner}/{ref}_merged.bam.bai",
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        bcf="data/variants/freebayes/{aligner}/{ref}/split/{region}.bcf",
+    log:
+        "data/log/freebayes/{aligner}/{ref}/{region}.log"
+    threads: 1
+    params:
+        region=lambda wc: "' --region '".join(REGIONS[wc.ref][wc.region])
+    shell:
+        "( freebayes"
+        "   --theta 0.02" # higher prior on mutation rate
+        "   --use-reference-allele"
+        "   --min-mapping-quality 10"
+        "   --min-base-quality 10"
+        "   --min-alternate-fraction 0.1"
+        "   --min-alternate-count 1"
+        "   --min-alternate-total 4"
+        "   --use-mapping-quality"
+        "   --genotype-qualities"
+        "   --region '{params.region}'"
+        "   -f {input.ref}"
+        "   {input.bam}"
+        " | bcftools view"
+        "   -O b"
+        "   -o {output.bcf}"
+        " ) >{log} 2>&1"
+
+rule mpileup:
+    input:
+        bam="data/alignments/{aligner}/{ref}_merged.bam",
+        bai="data/alignments/{aligner}/{ref}_merged.bam.bai",
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        bcf="data/variants/mpileup/{aligner}/{ref}/split/{region}.bcf",
+    log:
+        "data/log/mpileup/{aligner}/{ref}/{region}.log"
+    threads: 1
+    params:
+        region=lambda wc: "' --region '".join(REGIONS[wc.ref][wc.region]),
+        targets=lambda wc: "' --targets '".join(REGIONS[wc.ref][wc.region]) # for bcftools
+    shell:
+        "( samtools mpileup"
+        "   --output-tags DP,AD,ADF,ADR,SP,INFO/AD,INFO/ADF,INFO/ADR" #output everything
+        "   --region '{params.region}'"
+        "   --fasta-ref {input.ref}"
+        "   --redo-BAQ"
+        "   --BCF --uncompressed"
+        "   {input.bam}"
+        " | bcftools call"
+        "   --targets '{params.targets}'" # might not be needed
+        "   --multiallelic-caller"
+        "   --prior 0.01" # increase mutation rate prior
+        "   -O b"
+        "   -o {output.bcf}"
+        " ) >{log} 2>&1"
+
+rule bcfmerge:
+    input:
+        bcf=lambda wc: expand("data/variants/{caller}/{aligner}/{ref}/split/{region}.bcf",
+                              caller=wc.caller, aligner=wc.aligner, ref=wc.ref,
+                              region=sorted(REGIONS[wc.ref])),
+    output:
+        bcf="data/variants/{caller}/{aligner}/{ref}.bcf",
+    log:
+        "data/log/merge/{caller}/{aligner}/{ref}.log"
+    threads: 16
+    shell:
+        "( bcftools concat"
+        "   --allow-overlaps"
+        "   --ligate"
+        "   --remove-duplicates"
+        "   --threads {threads}"
+        "   -O b"
+        "   -o {output.bcf}"
+        "   {input.bcf}"
+        " ) >{log} 2>&1"

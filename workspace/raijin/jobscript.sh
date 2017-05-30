@@ -7,6 +7,6 @@ set -ueo pipefail
 
 export TMPDIR=$PBS_JOBFS
 
-module load snakemake adapterremoval nextgenmap samtools bcftools freebayes
+module load snakemake adapterremoval nextgenmap samtools bcftools freebayes bwa
 
 {exec_job}

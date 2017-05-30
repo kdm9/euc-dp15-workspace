@@ -5,10 +5,13 @@ SAMPLES = yaml.load(open("rawdata/samples.yml"))
 
 rule all:
     input:
-        expand("data/alignments/ngm/{ref}/{sample}.bam", ref=config["mapping"]["ref"],
+        expand("data/alignments/{aligner}/{ref}/{sample}.bam",
+               ref=config["mapping"]["ref"],
+               aligner=config["mapping"]["aligners"],
                sample=SAMPLES),
-        expand("data/alignments/ngm/{ref}_merged.bam", ref=config["mapping"]["ref"]),
-
+        expand("data/alignments/{aligner}/{ref}_merged.bam",
+               aligner=config["mapping"]["aligners"],
+               ref=config["mapping"]["ref"]),
 
 rule ngmap:
     input:
@@ -40,6 +43,34 @@ rule ngmap:
         " && samtools index {output.bam}"
         " ) >{log} 2>&1"
 
+rule bwamem:
+    input:
+        reads="data/reads/{sample}.fastq.gz",
+        ref=lambda wc: config['refs'][wc.ref]
+    output:
+        bam="data/alignments/bwa/{ref}/{sample}.bam",
+        bai="data/alignments/bwa/{ref}/{sample}.bam.bai",
+    log:
+        "data/log/bwa/{ref}/{sample}.log"
+    threads:
+        8
+    shell:
+        "( bwa mem"
+        "   -p" # paired input
+        "   -t {threads}"
+        "   -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}'"
+        "   {input.ref}"
+        "   {input.reads}"
+        " | samtools view -Suh -"
+        " | samtools sort"
+        "   -T ${{TMPDIR:-/tmp}}/{wildcards.sample}"
+        "   -@ {threads}"
+        "   -m 1G"
+        "   -o {output.bam}"
+        "   -" # stdin
+        " && samtools index {output.bam}"
+        " ) >{log} 2>&1"
+
 rule mergebam:
     input:
         expand("data/alignments/{{aligner}}/{{ref}}/{sample}.bam", sample=SAMPLES),
@@ -48,7 +79,7 @@ rule mergebam:
         bai="data/alignments/{aligner}/{ref}_merged.bam.bai",
     log:
         "data/log/mergebam/{ref}.log"
-    threads: 16
+    threads: 8
     shell:
         "( samtools merge"
         "   -@ {threads}"

@@ -3,6 +3,9 @@ qc:
   adapter2: CTGTCTCTTATACACATCTGACGCTGCCGACGANNNNNNNNGTGTAGATCTCGGTGGTCGCCGTATCATT
 
 mapping:
+  aligners:
+    - ngm
+    - bwa
   ref: grandis
 
 refs:
@@ -13,6 +16,18 @@ denovodist:
   kwip_sketchsize: 1e9
   mash_sketchsize: 1e5
   ksize: 21
+
+varcall:
+  chunksize: 1000000
+  aligners:
+    - ngm
+      # - bwa
+  callers:
+    - freebayes
+    - mpileup
+  genomes:
+    - grandis
+  
 
 sample_sets:
 
