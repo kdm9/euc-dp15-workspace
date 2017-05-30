@@ -3,6 +3,49 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
+# 2017-05-30 -- TerrorStructure
+
+...as I'm now calling it.
+
+Planning to try the 012-encoded data generated via plink's `--recode
+A-transpose` to see if there's some weird bug in the terastructure `read_bed`
+function (which there may be, as I've already found one).
+
+
+Plink traw conversion with:
+
+```bash
+plink --bfile nooutlier --recode A-transpose --out nooutlier \
+    --allow-extra-chr
+```
+
+Convert to raw 012 with awk:
+
+```bash
+awk 'NR>1{for (i=7; i<NF; i++){printf("%s\t", $i);}; printf("%s\n", $NF);}' < nooutlier.traw > nooutlier.012
+```
+
+Test run:
+
+```bash
+terastructure \
+    -label rfreq1M-012 \
+    -rfreq 1000000 \
+    -force \
+    -file plink/nooutlier.012 \
+    -n 123 \
+    -seed 123 \
+    -l 8579612 \
+    -k 5 \
+    -nthreads 16
+```
+
+And it died. See the [issue on github](https://github.com/StoreyLab/terastructure/issues/14).
+Long story short, it has an overflow error deep in GSL. This is strongly
+suggestive that the read_bed function is broken, as this error didn't happen
+when using the BED file on the exact same data.
+
+
 # 2017-05-24 -- Plotting read stats
 
 ```R
