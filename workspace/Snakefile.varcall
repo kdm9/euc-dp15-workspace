@@ -1,42 +1,8 @@
 configfile: "config.yml"
 
-def make_regions(rdict, window=1e6):
-    window = int(window)
-    ret = {}
-    for refname, refpath in rdict.items():
-        fai = refpath+".fai"
-        windows = []
-        with open(fai) as fh:
-            def parsel(l):
-                cname, clen, _, _, _ = l.split()
-                clen = int(clen)
-                return cname, clen
-            curwin = []
-            curwinlen = 0
-            for cname, clen in map(parsel, fh):
-                if clen < window:
-                    curwinlen += clen
-                    curwin.append(cname)
-                    if curwinlen > window:
-                        windows.append(curwin)
-                        curwin = []
-                        curwinlen = 0
-                else:
-                    for start in range(0, clen, window):
-                        wlen = min(clen - start, window)
-                        windows.append(["{}:{}-{}".format(cname, start, start+wlen)])
-            if len(curwin) > 0:
-                windows.append(curwin)
+import snkmk
 
-        ref = dict()
-        for i, w in enumerate(windows):
-            wname = "W{:05d}".format(i)
-            ref[wname]=w
-        ret[refname] = ref
-        print(refname, "has", len(ref), "windows")
-    return ret
-
-REGIONS = make_regions(config["refs"], window=config["varcall"]["chunksize"])
+REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
 
 rule all:
     input:
@@ -84,6 +50,7 @@ rule mpileup:
         ref=lambda wc: config['refs'][wc.ref],
     output:
         bcf="data/variants/mpileup/{aligner}/{ref}/split/{region}.bcf",
+        idx="data/variants/mpileup/{aligner}/{ref}/split/{region}.bcf.csi",
     log:
         "data/log/mpileup/{aligner}/{ref}/{region}.log"
     threads: 1
@@ -104,6 +71,7 @@ rule mpileup:
         "   --prior 0.01" # increase mutation rate prior
         "   -O b"
         "   -o {output.bcf}"
+        " && bcftools index -f {output.bcf}"
         " ) >{log} 2>&1"
 
 rule bcfmerge:
@@ -111,15 +79,17 @@ rule bcfmerge:
         bcf=lambda wc: expand("data/variants/{caller}/{aligner}/{ref}/split/{region}.bcf",
                               caller=wc.caller, aligner=wc.aligner, ref=wc.ref,
                               region=sorted(REGIONS[wc.ref])),
+        idx=lambda wc: expand("data/variants/{caller}/{aligner}/{ref}/split/{region}.bcf.csi",
+                              caller=wc.caller, aligner=wc.aligner, ref=wc.ref,
+                              region=sorted(REGIONS[wc.ref])),
     output:
         bcf="data/variants/{caller}/{aligner}/{ref}.bcf",
     log:
         "data/log/merge/{caller}/{aligner}/{ref}.log"
-    threads: 16
+    threads: 2
     shell:
         "( bcftools concat"
         "   --allow-overlaps"
-        "   --ligate"
         "   --remove-duplicates"
         "   --threads {threads}"
         "   -O b"

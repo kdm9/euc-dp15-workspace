@@ -24,7 +24,10 @@ freebayes_ful:
   jobfs: 400G
 
 freebayes:
-  time: '5:00:00'
+  time: '12:00:00'
 
 mpileup:
+  time: '3:00:00'
+
+bcfmerge:
   time: '3:00:00'
