@@ -1,0 +1,17 @@
+
+rule mergebam:
+    input:
+        expand("data/alignments/{{aligner}}/{{ref}}/{sample}.bam", sample=SAMPLES),
+    output:
+        bam="data/alignments/{aligner}/{ref}_merged.bam",
+        bai="data/alignments/{aligner}/{ref}_merged.bam.bai",
+    log:
+        "data/log/mergebam/{ref}.log"
+    threads: 8
+    shell:
+        "( samtools merge"
+        "   -@ {threads}"
+        "   {output.bam}"
+        "   {input}"
+        " && samtools index {output.bam}"
+        " ) >{log} 2>&1"

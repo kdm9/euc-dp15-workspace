@@ -1,4 +1,4 @@
-def parsefai(l):
+def parsefai(fai):
     with open(fai) as fh:
         for l in fh:
             cname, clen, _, _, _ = l.split()

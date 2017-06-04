@@ -19,6 +19,7 @@ rule freebayes:
         ref=lambda wc: config['refs'][wc.ref],
     output:
         bcf="data/variants/freebayes/{aligner}/{ref}/split/{region}.bcf",
+        idx="data/variants/freebayes/{aligner}/{ref}/split/{region}.bcf.csi",
     log:
         "data/log/freebayes/{aligner}/{ref}/{region}.log"
     threads: 1
@@ -41,6 +42,7 @@ rule freebayes:
         " | bcftools view"
         "   -O b"
         "   -o {output.bcf}"
+        " && bcftools index -f {output.bcf}"
         " ) >{log} 2>&1"
 
 rule mpileup:
