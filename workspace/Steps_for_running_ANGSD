@@ -1,0 +1,377 @@
+## Notes for "pipeline" used to map the eucalypt WGS data for project 1
+
+## Last updated 24 APRIL 2017
+
+######################################################################
+
+##Step 1: Acquiring data from ANU
+
+		#Download data from ANU Edmund server
+	scp -r jjanes@edmund.anu.edu.au:~/RAndrewPlate2.tar ./		#change directories of course
+
+		# or use rsync
+	 rsync -hivtP jjanes@edmund.anu.edu.au:~/RAndrewPlate2.tar ./
+
+##Step 1.1: Backup raw data ASAP
+
+		# copy raw tar file to Aspera Shares for backup
+
+#####################################################################
+
+##Step 2: Filtering and mapping
+
+		#unzip tar ball to get .gz files for use in FastQC and Trimmomatic
+	tar -zxvf <file>
+		#if this returns an error about child process try tar -xvf <file>
+	
+		#run samples through FastQC - fastqc_loop.sh
+	
+		#remove sections of file names so that files end with R1.fastq - 
+		# - scripts in renaming folder
+	
+		#run samples through Trimmomatic 0.36 - Trimmomatic_forloop_orange_20Jan2017.sh
+		#files do not need to be gunzipped
+	
+		#re-run samples through FastQC to check
+	
+		#save all output to Aspera Shares
+	
+	
+##Step 2.1: Map trimmed reads to reference using Stampy 1.0.29 --sensitive mapping
+
+		#upload filtered fastq.gz files to Orange and gunzip them
+	
+		#make sure the reference is there also in .gzip form
+	
+		#first run the Stampy mapping script with the lines for creating 
+		#the necessary reference and hash files commented in (remove the # before
+		#those commands)
+		#Once ref and hash files are made you can comment out those commands
+		#and run the for loop part of the script 	
+	
+		#second map reads to reference using Stampy on Orange - Stampy_forloop_orange_20Jan2017
+		#note that stampy -M (input files) need to be the last argument of the command
+		#save all raw mapping files to Aspera Shares
+	
+	
+##Step 2.2: Map trimmed reads to reference using BWA 0.7.15 with BWA-mem algorithm
+
+		#upload filtered fastq.gz files to Orange and gunzip them
+	
+		#make sure the reference is there also in .gzip form
+	
+		#first run BWA so that it indexes reference genome, once that is done
+		#you can comment out those lines and just refer to the index file
+	
+		#map reads to reference using BWA on Eucbox or Orange - BWA_mapping_Orange_3Feb2017
+	
+		#save all raw mapping files to Aspera Shares
+
+	
+##Step 2.3: Rename all sam files and convert to bam, obtain flagstats
+
+		#rename all files to include species name - rename scripts
+	
+		#convert SAM mapping files to BAM files and sort them using SAMTOOLS 1.3.1 - 
+		#samtobam_sortbam_loop_orange_feb2017.sh
+	
+		#obtain flagstats for BAM files - flagstats_orange_feb2017.sh
+	
+		#save all outputs to Aspera Shares
+
+	
+##Step 2.4: Merge multiple bam files (replicates)
+	
+		#merge any replicate sorted BAM files - mergeBAM_Orange_Feb2017.sh
+		#Note that after merging they may need to be re-sorted just in case there were
+		#any differences in the mappings between files
+	
+	samtools merge output input1 input2
+	
+#####################################################################
+	
+##Step 3: INSTALLING ANGSD 0.910 AND VARIOUS DEPENDENCIES
+	
+		#install ANGSD
+
+	module list #check what modules are loaded
+	module unload intel-cc/12.1.9.293
+	module load gcc
+	module load zlib
+	module load gsl		
+	
+		#this gets the angsd/misc file to make without error but not sure if need the modify to 
+		#htslib makefile after this
+	
+	module avail
+	module load git/2.9.0
+	git clone https://github.com/samtools/htslib.git
+	git clone https://github.com/angsd/angsd.git
+	cd htslib; make; cd ../angsd; make HTSSRC=../htslib
+
+		#Generally receive errors after installation regarding the 
+		#E::hts_open_format angsd:multireader.cpp.335, suggesting that samtools can't read 
+		#the file
+		#To fix this do the following:
+	
+	cd /htslib/
+	vi Makefile
+	
+		#add this line to the end of the CPPFLAGS = -g -wall -O2 line
+	-D_FILE_OFFSET_BITS=64
+	
+		#then recompile htslib
+	cd htslib
+	make clean; make
+
+
+#Step 3.1: install ngsTools dependency
+	
+	module load git/2.9.0
+	module list #check what modules are loaded
+	module unload intel-cc/12.1.9.293
+	module load gcc
+	module load zlib
+	git clone --recursive https://github.com/mfumagalli/ngsTools.git
+	cd ngsTools
+	make
+
+		#be sure to modify your .bashrc (session) or your etc/environment (system wide) 
+		#so that ANGSD/NGSTOOLS can be accessed from anywhere
+
+	nano .bashrc
+		#add this line to the bottom, making it appropriate to your directories
+	export PATH=$PATH:/home/blah/angsd/blah
+		#log out and log back in to make changes (CTRL+D)
+	
+	
+##Step 3.2:	install ngsDist dependency
+	
+	git clone https://github.com/fgvieira/ngsDist.git
+	module load gsl zlib
+
+	cd ngsDist
+	make test
+	make
+	make clean
+
+		#returned errors - suggest the following fix:
+		#cd ngsDist
+		#vi Makefile
+		#change this line LIB = $(shell pkg-config --cflags --libs gsl) -lz  -lpthread
+		#to this LIB = $(shell pkg-config --cflags --libs gsl) $(shell pkg-config --cflags --libs zlib)  -lpthread
+		#save 
+		#module unload intel-cc/12.1.9.293
+		#module load intel-cc/17.0.1.132
+		#make ###DO NOT MAKE CLEAN
+	
+	
+##Step 3.3: install realSFS 
+		##NOTE: this is also found in the angsd/misc/ folder
+
+	wget https://omictools.com/realsfs-tool
+	tar -zxvf realsfs-tool
+		#cd into samtools subdirectory
+	make
+	cd ..
+	make
+		#should have two programs present - angsd.g++ and optimSFS.gcc
+		#this should complete the install of sfs in /angsd/misc/realSFS/
+	
+	
+##Step 3.4: install ngsAdmix dependency	
+		##NOTE: this is also installed under the angsd/misc directory
+	
+	wget popgen.dk/software/download/NGSadmix/ngsadmix32.cpp
+	g++ ngsadmix32.cpp -O3 -lpthread -lz -o NGSadmix
+
+
+##Step 3.5: install ngsF dependency (also requires zlib and gsl)
+	
+	git clone https://github.com/fgvieira/ngsF.git
+	cd ngsF
+	make
+	make test
+	make clean
+
+		#NOTE: this seems to compile ok only after gsl, zlib and intel-cc/17.0.1.132 are loaded
+
+###############################################################
+
+##Running ANGSD to generate geno,saf, maf, beagle etc input files
+
+		#Add angsd as a variable to your PATH (.profile) so you can access it anywhere
+		#export PATH=$PATH:/home/583/jxj583/angsd/
+
+		#Convert SAM to BAM with Samtools and then sort the BAM files
+		#set reference and ancestral genomes, convert to .bgz files 
+		#(gunzip file | bgzip file)
+	
+		#doMajorMinor 1 = use genotype likelihood scores, doGL 2 = use GATK method
+		#doMaf 2 = fixed major, unknown minor; doGeno 36 = print genotypes as binary
+		#and print genotypes as direct alleles(32 does binary; 4 does full alleles);
+		#SNP pval increases speed for ngscovar and reduces file size for safs
+		#rather than using all sites; doPost 1 means use HWE based prior
+		#-doGlf = generate beagle files
+		#doSaf = generate saf files
+		#doPlink 1 = create binary fam/bim/bed files - DOES NOT WORK - relies on -doGeno first
+		#doPlink 2 = create tbed files... not sure if this works
+		#doVcf 1 = creates a vcf file... not 100% sure if the format is correct
+		#doIBS 1 = create matrix of distances for PCA/MDS, 1 = single sample base, 2 = consensus base
+		#doIBS relies on -doCounts 1 and -makeMatrix 1 (MDS) or -doCovar (PCA) - not sure how these are 
+		#different to using ngsTools
+		
+		#best to use 2 threads on Raijin, all samples takes around 55 hours
+		
+	
+		##SCRIPTS = Orange_genos_angsd.sh
+		##SCRIPTS = Orange_realSFS.sh
+		##SCRIPTS = 
+
+###############################################################
+
+##Step 1: RUNNING PCA (ngstools way)
+
+		#~72 hours for 190 samples; ~20 hours for 15
+	
+		#use script - SCRIPT= PCA_orange_angsd.sh
+
+		#gunzip the binary .geno.gz file
+	
+		#determine how many variable allele sites you have in your PCA file, 
+		#this is stored in the .mafs.gz file - 
+	
+		##SCRIPT= get_mafs.sh
+
+	less -S .mafs.gz
+	N_SITES=`zcat .mafs.gz | tail -n+2 | wc -l`
+	echo $N_SITES
+
+		#then run NGSTOOLS NGSCOVAR subprogram of angsd to generate covariance matrix and eigenvalues
+	$NGSTOOLS/ngsPopGen/ngsCovar -probfile Results/ALL.geno -outfile Results/ALL.covar -nind 60 -nsites $N_SITES 
+	-call 0 -norm 0 
+
+		#to plot the PCA in R, first create a table of ID's
+		##Note: this must be organised the way that the bam list was when you ran the angsd commands
+	module load R/3.3.3
+	Rscript -e 'write.table(cbind(seq(1,167),rep(1,167),c(rep("Albens",23),rep("AlbXMicro",1),rep("Caleyi",8),rep("Conica",18),rep("Crebra",13),rep("Fibrosa",14),rep("Leucoxylon",1),rep("Melliodora",16),rep("Microcarpa",18),rep("Moluccana",12),rep("Polyanthemos",21),rep("Populnea",2),rep("Sideroxylon",18),rep("SiderXMicro",1),rep("SiderXMoluc",1))), row.names=F,sep=" ", col.names=c("FID","IID","CLUSTER"),file="names.clst",quote=F)'
+
+		#then run the R plotPCA.R script, the -c 1-2 refers to the axes to plot
+		#this requires several dependencies
+	Rscript plotPCA.R -i Results/ALL.covar -c 1-2 -a Results/ALL.clst -o Results/ALL.pca.pdf
+	
+		#could also use the same ggplot script for the ngsDist mds *SCRIPT=ngsDist_mds.R
+		
+		##script to plot multiple covar files with first three axes *SCRIPT=PCA_loop.sh*
+
+###############################################################
+
+##Step 2: RUNNING NGSADMIX (beagle input)
+
+		#requires beagle input from running angsd
+		#best to use a max of 8 threads for high values of K, takes around 20 hours
+	 
+	$NGSadmix -likes buxealesBWA.beagle.gz -K 2 -P 4 -o buxeales_BWA_admix2 -minMaf 0.05
+
+		#the .qopt file contains the admixture proportions to plot
+		#the .fopt file contains the estimated allele frequencies
+	
+		#Plot the admixture proportions in R
+	admix<-t(as.matrix(read.table("myoutfiles.qopt")))
+	barplot(admix,col=1:3,space=0.5,border=NA,xlab="Individuals",ylab="admixture")
+
+		#Plot proportions using a pop/indiv ID file
+	pop<-read.table("pop.info",as.is=T)
+	admix<-t(as.matrix(read.table("myoutfiles.qopt")))
+	admix<-admix[,order(pop[,1])]
+	pop<-pop[order(pop[,1]),]
+	h<-barplot(admix,col=1:3,space=0.5,border=NA,xlab="Individuals",ylab="admixture")
+	text(tapply(1:nrow(pop),pop[,1],mean),-0.05,unique(pop[,1]),xpd=T)
+
+		##SCRIPT = Raijin_ngsadmix.sh
+
+		##NOTE: Rscript for plotting these with ggplot####
+
+###############################################################
+
+##Step 3: RUNNING NGSDIST to make trees (beagle input)
+
+		#been using 4 threads, generally takes about 15 hours
+
+		#need to create a population/sample label file - one line per sample
+		#the example below produces one line per sample, for 3 pops, each population having 20 indivs
+		#Note that for individual labels rather than pop labels you could just use the bam.list files
+	Rscript -e 'cat(paste(rep(c("LWK","TSI","PEL"),each=20), rep(1:20, 3), sep="_"), sep="\n", file="pops.label")'
+
+		##NOTE: NEED TO INSTALL FASTME##
+		#download FastME
+		
+	module list 	#shows list of loaded modules
+	module load gcc
+	module unload intel.cc
+	tar -zxvf <file>
+	./configure --prefix=/home/583/jxj583/fastme-2.1.5
+	make
+	make install
+
+		#create the pairwise distance matrix files from the beagle format geotype files
+		#running without bootstrap produces one distance matrix in one .output file
+		#running with bootstraps produces one file with the distance matrix first, followed
+		#by X bootstrapped/resampled distance matrices after 
+	
+		##SCRIPTS = Raijin_ngsdist.sh or Raijin_bootstrap_ngsdist.sh
+
+	$NGSTOOLS/ngsDist/ngsDist -verbose 1 -geno ALL.geno.gz -probs -n_ind 60 -n_sites $N_SITES -labels 
+	pops.label -o Results/ALL.dist -n_threads 4 
+
+	$ngsdist -verbose 1 -geno melliodorae.beagle.gz -probs -n_ind 35 -n_sites 26905088 
+	-labels melliodorae.txt -n_boot_rep 100 -boot_block_size 10000 -out melliodorae_dist10K_output 
+	-n_threads 4
+
+		#create the newick format for visualisation of the pairwise distance matrices
+		#using fastme
+		#fastme works fine with one thread and takes about 2 mins to do one file
+	
+		##SCRIPTS = Raijin_fastme.sh
+	
+		#plot tree file using R
+	Rscript -e 'library(ape); library(phangorn); pdf(file="Results/ALL.tree.pdf"); plot(read.tree("Results/ALL.tree"), 
+	cex=0.5); dev.off();' evince Results/ALL.tree.pdf
+
+		#trees can also be plotted using ggtree - they look nicer
+	
+		#NOTE: IF PLOTTING BOOTSTRAPS YOU NEED RAXML
+	
+		#install RaxML v8.2
+	git clone https://github.com/stamatak/standard-RAxML
+	cd RaxML
+	module load gcc
+	module unload intel-cc/12.1.9.293
+	make -f Makefile.SSE3.PTHREADS.gcc
+	rm *.o
+
+
+	
+
+##Step 4: RUNNING MDS (dist output as input)
+
+	#requires that ngsDist be run on beagle format to generate the dist files
+	#once dist files generated use the R script in ngsTools/PopGen/scripts/getMDS.R
+	
+	#create a variable for the number of individuals
+samples=30
+
+tail -n +3 file.dist | head -n $samples | Rscript getMDS.R --no_header --data_symm -n 4 -m "mds" -o file.mds 
+	
+	#produces another matrix of distance values
+	#plot this matrix in R with ggplot using 
+	##SCRIPT:ngsDist_mds.R
+
+	
+
+	
+	
+
+
+
+	

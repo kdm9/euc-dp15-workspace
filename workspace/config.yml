@@ -30,7 +30,7 @@ varcall:
   
 
 sample_sets:
-  nooutlier:
+  jazmerged:
     "FDK10": ["FDK10", ]
     "J294": ["J294", ]
     "J296": ["J296", ]

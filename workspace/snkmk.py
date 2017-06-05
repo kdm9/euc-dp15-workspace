@@ -5,6 +5,7 @@ def parsefai(fai):
             clen = int(clen)
             yield cname, clen
 
+
 def make_regions(rdict, window=1e6):
     window = int(window)
     ret = {}
@@ -32,14 +33,13 @@ def make_regions(rdict, window=1e6):
         ref = dict()
         for i, w in enumerate(windows):
             wname = "W{:05d}".format(i)
-            ref[wname]=w
+            ref[wname] = w
         ret[refname] = ref
         print(refname, "has", len(ref), "windows")
     return ret
 
 
-def make_chroms(rdict, window=1e6):
-    window = int(window)
+def make_chroms(rdict):
     ret = {}
     for refname, refpath in rdict.items():
         fai = refpath+".fai"
@@ -54,7 +54,7 @@ def make_chroms(rdict, window=1e6):
         ref = dict()
         for i, w in enumerate(chroms):
             wname = "W{:05d}".format(i)
-            ref[wname]=w
+            ref[wname] = w
         ret[refname] = ref
         print(refname, "has", len(ref), "chromosome sets")
     return ret

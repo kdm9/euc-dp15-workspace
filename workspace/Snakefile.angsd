@@ -1,17 +1,53 @@
+configfile: "config.yml"
+import snkmk
 
-rule mergebam:
+REGIONS = snkmk.make_chroms(config["refs"])
+
+rule all:
     input:
-        expand("data/alignments/{{aligner}}/{{ref}}/{sample}.bam", sample=SAMPLES),
+        geno="data/angsd/ngm/grandis/split/genomewide/jazmerged.geno.gz",
+
+rule angsd_stage1_split:
+    input:
+        bams=lambda wc: ["data/alignments/{aligner}/{ref}/{sample}.bam".format(
+                             aligner=wc.aligner, ref=wc.ref, sample=s)
+                         for s in sorted(config["sample_sets"][wc.set].keys())],
+        ref=lambda wc: config['refs'][wc.ref],
+
     output:
-        bam="data/alignments/{aligner}/{ref}_merged.bam",
-        bai="data/alignments/{aligner}/{ref}_merged.bam.bai",
+        geno="data/angsd/{aligner}/{ref}/split/{region}/{set}.geno.gz",
     log:
-        "data/log/mergebam/{ref}.log"
-    threads: 8
+        "data/log/angsd_stage1_split/{aligner}/{ref}/{region}/{set}.log"
+    params:
+        region="" if wc.region == "genomewide" else "-region " + wc.region
+    threads: 2
     shell:
-        "( samtools merge"
-        "   -@ {threads}"
-        "   {output.bam}"
-        "   {input}"
-        " && samtools index {output.bam}"
+        "( angsd"
+        "   -bam <(echo {input.bams})" # fofn
+        "   {params.region}"
+        "   -P {threads}"
+        "   -doMajorMinor 1"
+        "   -doGL 2"
+        "   -doMaf 2"
+        "   -doGeno 36"
+        "   -doPost 1"
+        "   -doSNPStat 1"
+        "   -doPlink 2"
+        "   -skipTriallelic 1"
+        "   -doSaf 1"
+        "   -doVcf 1"
+        "   -doGlf 2"
+        "   -doCounts 1"
+        "   -doIBS 1"
+        "   -SNP_pval 1e-3"
+        "   -baq 1"
+        "   -minMapQ 30"
+        "   -minQ 20"
+        "   -ref {input.ref}"
+        "   -anc {input.ref}"
+        "   -out data/angsd/{wildcards.aligner}/{wildcards.ref}/split/{wildcards.region}/{wildcards.set}"
         " ) >{log} 2>&1"
+
+# angsd -P 2 -bam All_noreps_bam.list -out All_noreps_Plink -ref $REF -anc $ANC
+# -GL 2 -doMajorMinor 1 -doGlf 2 -doMaf 2 -doGeno 4 -doPlink 2 -skipTriallelic 1
+# -C 50 -baq 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-3 -doPost 1
