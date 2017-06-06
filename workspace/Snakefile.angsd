@@ -5,7 +5,8 @@ REGIONS = snkmk.make_chroms(config["refs"])
 
 rule all:
     input:
-        geno="data/angsd/ngm/grandis/split/genomewide/jazmerged.geno.gz",
+        geno=expand("data/angsd/ngm/grandis/jazmerged/split/{region}.geno.gz",
+                     region=REGIONS["grandis"])
 
 rule angsd_stage1_split:
     input:
@@ -15,39 +16,52 @@ rule angsd_stage1_split:
         ref=lambda wc: config['refs'][wc.ref],
 
     output:
-        geno="data/angsd/{aligner}/{ref}/split/{region}/{set}.geno.gz",
+        arg="data/angsd/{aligner}/{ref}/{set}/split/{region}.arg",
+        beagle="data/angsd/{aligner}/{ref}/{set}/split/{region}.beagle.gz",
+        geno="data/angsd/{aligner}/{ref}/{set}/split/{region}.geno.gz",
+        hwe="data/angsd/{aligner}/{ref}/{set}/split/{region}.hwe.gz",
+        ibs="data/angsd/{aligner}/{ref}/{set}/split/{region}.ibs.gz",
+        mafs="data/angsd/{aligner}/{ref}/{set}/split/{region}.mafs.gz",
+        safp="data/angsd/{aligner}/{ref}/{set}/split/{region}.saf.pos.gz",
+        safi="data/angsd/{aligner}/{ref}/{set}/split/{region}.saf.idx",
+        safz="data/angsd/{aligner}/{ref}/{set}/split/{region}.saf.gz",
+        stat="data/angsd/{aligner}/{ref}/{set}/split/{region}.snpStat.gz",
+        tfam="data/angsd/{aligner}/{ref}/{set}/split/{region}.tfam",
+        tped="data/angsd/{aligner}/{ref}/{set}/split/{region}.tped",
+        vcf="data/angsd/{aligner}/{ref}/{set}/split/{region}.vcf.gz",
     log:
-        "data/log/angsd_stage1_split/{aligner}/{ref}/{region}/{set}.log"
+        "data/log/angsd_stage1_split/{aligner}/{ref}/{set}/{region}.log"
     params:
-        region="" if wc.region == "genomewide" else "-region " + wc.region
-    threads: 2
+        regionarg=lambda wc: "" if wc.region == "genomewide" else "-rf $T/regions",
+        regions=lambda wc: " ".join(REGIONS[wc.ref][wc.region])
+    threads: 1
     shell:
+        "T=$(mktemp -d); trap \"rm -rf $T\" EXIT ; "
+        "echo {input.bams} | tr ' ' '\\n' > $T/bamfile ; "
+        "echo {params.regions} | tr ' ' '\\n' > $T/regions ; "
         "( angsd"
-        "   -bam <(echo {input.bams})" # fofn
-        "   {params.region}"
+        "   -bam $T/bamfile"
+        "   {params.regionarg}"
         "   -P {threads}"
+        "   -doCounts 1"
+        "   -doGeno 4"
         "   -doMajorMinor 1"
-        "   -doGL 2"
+        "   -doGlf 2"
         "   -doMaf 2"
-        "   -doGeno 36"
         "   -doPost 1"
-        "   -doSNPStat 1"
+        "   -doIBS 1"
         "   -doPlink 2"
-        "   -skipTriallelic 1"
+        "   -doSNPStat 1"
         "   -doSaf 1"
         "   -doVcf 1"
-        "   -doGlf 2"
-        "   -doCounts 1"
-        "   -doIBS 1"
+        "   -anc {input.ref}"
+        "   -ref {input.ref}"
+        "   -out data/angsd/{wildcards.aligner}/{wildcards.ref}/{wildcards.set}/split/{wildcards.region}"
+        "   -GL 2" # GATK v1
         "   -SNP_pval 1e-3"
+        "   -C 50"
         "   -baq 1"
         "   -minMapQ 30"
         "   -minQ 20"
-        "   -ref {input.ref}"
-        "   -anc {input.ref}"
-        "   -out data/angsd/{wildcards.aligner}/{wildcards.ref}/split/{wildcards.region}/{wildcards.set}"
+        "   -skipTriallelic 1"
         " ) >{log} 2>&1"
-
-# angsd -P 2 -bam All_noreps_bam.list -out All_noreps_Plink -ref $REF -anc $ANC
-# -GL 2 -doMajorMinor 1 -doGlf 2 -doMaf 2 -doGeno 4 -doPlink 2 -skipTriallelic 1
-# -C 50 -baq 1 -minMapQ 30 -minQ 20 -SNP_pval 1e-3 -doPost 1

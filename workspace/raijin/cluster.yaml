@@ -31,3 +31,7 @@ mpileup:
 
 bcfmerge:
   time: '3:00:00'
+
+angsd_stage1_split:
+  time: '24:00:00'
+  mem: 8G

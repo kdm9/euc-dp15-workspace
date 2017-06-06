@@ -43,18 +43,14 @@ def make_chroms(rdict):
     ret = {}
     for refname, refpath in rdict.items():
         fai = refpath+".fai"
-        chroms = []
+        ref = dict()
         scafs = []
         for cname, clen in parsefai(fai):
             if cname.lower().startswith("chr"):
-                chroms.append([cname])
+                ref[cname] = [cname]
             else:
                 scafs.append(cname)
-        chroms.append(scafs)
-        ref = dict()
-        for i, w in enumerate(chroms):
-            wname = "W{:05d}".format(i)
-            ref[wname] = w
+        ref["scaffolds"] = scafs
         ret[refname] = ref
         print(refname, "has", len(ref), "chromosome sets")
     return ret
