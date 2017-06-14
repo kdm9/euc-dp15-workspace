@@ -8,7 +8,7 @@ rule all:
         geno=expand("data/angsd/ngm/grandis/jazmerged/split/{region}.geno.gz",
                      region=REGIONS["grandis"])
 
-rule angsd_stage1_split:
+rule angsd_allsteps_split:
     input:
         bams=lambda wc: ["data/alignments/{aligner}/{ref}/{sample}.bam".format(
                              aligner=wc.aligner, ref=wc.ref, sample=s)
@@ -65,3 +65,18 @@ rule angsd_stage1_split:
         "   -minQ 20"
         "   -skipTriallelic 1"
         " ) >{log} 2>&1"
+
+rule plink_makebed_split:
+    input:
+        tfam="data/angsd/{aligner}/{ref}/{set}/split/{region}.tfam",
+        tped="data/angsd/{aligner}/{ref}/{set}/split/{region}.tped",
+    output:
+        bed="data/angsd/{aligner}/{ref}/{set}/split/{region}.bed",
+    log: "data/log/plink/makebed/{aligner}/{ref}/{set}/split/{region}.log"
+    shell:
+        "plink "
+        "   --allow-extra-chr"
+        "   --make-bed"
+        "    --tfile $(dirname {input.tped})/$(basename {input.tped} .tped)"
+        "    --out $(dirname {output.bed})/$(basename {output.bed} .bed)"
+        " >{log} 2>&1"
