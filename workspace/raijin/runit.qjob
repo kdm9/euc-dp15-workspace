@@ -14,8 +14,7 @@ source /g/data1/xe2/.profile
 
 export TMPDIR=$PBS_JOBFS
 
-module load snakemake adapterremoval nextgenmap samtools bcftools freebayes
-module load angsd plink mash khmer kwip
+source raijin/modules.sh
 
 snakemake --unlock
 
