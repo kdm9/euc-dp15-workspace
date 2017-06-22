@@ -20,10 +20,20 @@ author: Kevin Murray
 - [ ] Work out raijin angsd spookyness:
     - Why doesn't ABBABABA work on raijin
     - Doubled FST results?
+- [ ] Investigate ad-libs (https://github.com/MikkelSchubert/ad-libs) for
+  introgression detection
+
+# 2017-06-09 -- SNP filtering redux
+
+- remove sites $H_o > 0.8$  in 2 or more populations
+- Beware the depth fiters w/ XO sam flags (din't work for Jaz)
+- Re-run angds on each species to generate hwe
 
 # 2017-06-07 -- SNP filtering plans
 
 ![Plan of ANGSD-based site filtering](data/2017-06-07_filtering-plan.jpg)
+
+![things to filter on](data/2017-06-07_filtering-notes.jpg)
 
 The filtering pipeline looks like it will be a 2 step process:
 
@@ -45,13 +55,13 @@ The filtering pipeline looks like it will be a 2 step process:
       be unreasonable and might remove very poor sites (though at the cost of
       needing to do `-doMaf 1`)
     - `-doSnpStat 1` is required for HWE, major/minor counts etc. These
-      filters will be done ouside angsd, returning a list of sites that pass
+      filters will be done outside angsd, returning a list of sites that pass
       QC.
     - `-GL 2` and `-doGlf 2` are required for various purposes, and may as
       well write the GL out as a beagle file
 2. External R/Julia script to filter sites based on all outputs of the above:
     - $H_o < 0.7$ (possibly done later at the per spp level, or at least $H_o
-      < 0.7$ in X species. 0.7 negotiable. $H_o$ calculatable from $F_is$)
+      < 0.7$ in X species. 0.7 negotiable. $H_o$ calculable from $F_{IS}$)
     - SnpStat minor allele counts (on either strand) must be $\ge 5$
     - Possible additional steps here, if we can think of them
     - Generate a sites file (preferably in BED format, if ANGSD can be
@@ -59,6 +69,6 @@ The filtering pipeline looks like it will be a 2 step process:
 3. Re-run angsd for all samples with `-sites`, generating the "All samples,
    QC sites" set.
 
-# TODO (Completed)
+ TODO (Completed)
 
 - [x] Snakemake-ify Jaz's first steps of the ANGSD pipeline
