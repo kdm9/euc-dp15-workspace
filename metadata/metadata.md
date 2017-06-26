@@ -13,7 +13,7 @@ series = series %>%
                 sp.short = sub(' ', '', sp.short),
                 indiv = sub('_', '-', indiv))
 
-joined = right_join(collection, series, by=c("ID"="indiv")) %>%
+joined = left_join(collection, series, by=c("ID"="indiv")) %>%
         select(-stampy, -bwa)
 
 # joined = full_join(collection, series, by=c("ID"="indiv")) %>%
