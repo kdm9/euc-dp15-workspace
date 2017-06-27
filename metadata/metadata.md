@@ -2,7 +2,7 @@
 
 This is the "final" metadata set including all bits of data
 
-```
+```{r}
 library(tidyverse)
 library(readxl)
 
@@ -17,8 +17,11 @@ collections = d %>% select(ID, Species, Latitude, Longitude, Location) %>%
     mutate(Species = gsub(' *(\\?|\\(.*\\))*$', '', Species.orig),
            Species = sub('^Eucalyptus alben$', 'Eucalyptus albens', Species),
            Species = sub('Eucalptus', 'Eucalyptus', Species),
-           Species = sub('Eucalpyptus', 'Eucalyptus', Species)
-          )
+           Species = sub('Eucalpyptus', 'Eucalyptus', Species)) %>%
+    rename(binomial.name=Species, binomial.name.orig=Species.orig) %>%
+    extract(binomial.name, c("species"), "^Eucalyptus (\\w+)$", remove=F) %>%
+    mutate(species = ifelse(!is.na(species), species,
+            gsub("Eucalyptus (\\w+) x (\\w+)", "\\1X\\2", binomial.name)))
 
 readnum = read.delim("orig/readnum.tsv", stringsAsFactors=F) %>%
     extract(filename, c("ID"), '.*\\/(\\S+)\\.fastq.gz') %>%
@@ -27,14 +30,12 @@ readnum = read.delim("orig/readnum.tsv", stringsAsFactors=F) %>%
 spp2ser = read.csv("spp2series.csv", stringsAsFactors=F)
 run2samp = read.csv("run_merging.csv", stringsAsFactors=F)
 
-joined = collections %>%
-        rename(binomial.name=Species, binomial.name.orig=Species.orig) %>%
-        extract(binomial.name, c("species"), "^Eucalyptus (\\w+)$", remove=F) %>%
-        mutate(species = ifelse(!is.na(species), species,
-                gsub("Eucalyptus (\\w+) x (\\w+)", "\\1X\\2", binomial.name))) %>%
-        left_join(readnum, by=c("ID"="ID")) %>%
-        left_join(spp2ser, by=c("species"="species")) %>%
-        right_join(run2samp, by=c("ID"="sample"))
+joined = run2samp %>%
+    left_join(readnum, by=c("sample"="ID")) %>%
+    left_join(collections, by=c("sample"="ID")) %>%
+    # Mosaic tree samples not in collections & therefore don't have a species
+    mutate(species=ifelse(grepl("^M\\d.$", sample), "melliodora", species)) %>%
+    left_join(spp2ser, by=c("species"="species"))
 
 write.csv(joined, "clean_metadata.csv", row.names=F)
 ```
@@ -43,7 +44,7 @@ write.csv(joined, "clean_metadata.csv", row.names=F)
 
 Not all species are in Jaz's table, so the following outputs a table that I then add to by hand
 
-```R
+```{r}
 series = read.csv("orig/pop_IDs_noreps.csv", stringsAsFactors=F) %>%
         mutate(indiv = sub('^(\\d+)', 'J\\1', indiv),
                 species = sub(' ', '', species),
