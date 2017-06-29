@@ -1,3 +1,7 @@
+import csv
+from collections import defaultdict
+
+
 def parsefai(fai):
     with open(fai) as fh:
         for l in fh:
@@ -54,3 +58,30 @@ def make_chroms(rdict):
         ret[refname] = ref
         print(refname, "has", len(ref), "chromosome sets")
     return ret
+
+
+def _iter_metadata():
+    with open("../metadata/clean_metadata.csv") as fh:
+        for samp in csv.DictReader(fh):
+            yield samp
+
+
+def make_run2sample():
+    r2s = {}
+    for run in _iter_metadata():
+        r2s[run["run"]] = run["sample.jaz"]
+    return r2s
+
+
+def make_sample2run():
+    s2r = defaultdict(list)
+    for run in _iter_metadata():
+        s2r[run["sample.jaz"]].append(run["run"])
+    return s2r
+
+
+def make_samplesets():
+    ssets = defaultdict(list)
+    for run in _iter_metadata():
+        ssets[run["series"]].append(run["run"])
+        ssets[run["species"]].append(run["run"])

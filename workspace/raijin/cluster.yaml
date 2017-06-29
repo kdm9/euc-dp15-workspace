@@ -3,18 +3,25 @@ __default__:
   queue: normal
   time: '01:00:00'
   jobfs: 100G
+  name: "{rule}_{wildcards}"
+
+poolreads:
+  time: '0:10:00'
 
 qcreads:
-  time: '0:10:00'
+  time: '2:00:00'
 
-readstats:
-  time: '0:10:00'
+read_count:
+  time: '2:00:00'
+
+unique_kmers:
+  time: '0:30:00'
 
 ngmap:
   time: '6:00:00'
 
 bwamem:
-  time: '8:00:00'
+  time: '6:00:00'
 
 mergebam:
   time: '4:00:00'

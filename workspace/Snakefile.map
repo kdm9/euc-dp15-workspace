@@ -1,29 +1,29 @@
-import yaml
+import snkmk
 configfile: "config.yml"
 
-SAMPLES = yaml.load(open("rawdata/samples.yml"))
+SAMPLE2RUN = snkmk.make_sample2run()
 
 rule all:
     input:
         expand("data/alignments/{aligner}/{ref}/{sample}.bam",
                ref=config["mapping"]["ref"],
                aligner=config["mapping"]["aligners"],
-               sample=SAMPLES),
+               sample=SAMPLE2RUN),
         expand("data/alignments/{aligner}/{ref}_merged.bam",
                aligner=config["mapping"]["aligners"],
                ref=config["mapping"]["ref"]),
 
 rule ngmap:
     input:
-        reads="data/reads/{sample}.fastq.gz",
+        reads="data/reads/samples/{sample}.fastq.gz",
         ref=lambda wc: config['refs'][wc.ref]
     output:
         bam="data/alignments/ngm/{ref}/{sample}.bam",
         bai="data/alignments/ngm/{ref}/{sample}.bam.bai",
     log:
-        "data/log/ngm/{ref}_{sample}.log"
+        "data/log/ngm/{ref}/{sample}.log"
     threads:
-        16
+        8
     shell:
         "( ngm"
         "   -q {input.reads}"
@@ -45,7 +45,7 @@ rule ngmap:
 
 rule bwamem:
     input:
-        reads="data/reads/{sample}.fastq.gz",
+        reads="data/reads/samples/{sample}.fastq.gz",
         ref=lambda wc: config['refs'][wc.ref]
     output:
         bam="data/alignments/bwa/{ref}/{sample}.bam",
@@ -73,7 +73,7 @@ rule bwamem:
 
 rule mergebam:
     input:
-        expand("data/alignments/{{aligner}}/{{ref}}/{sample}.bam", sample=SAMPLES),
+        expand("data/alignments/{{aligner}}/{{ref}}/{sample}.bam", sample=SAMPLE2RUN),
     output:
         bam="data/alignments/{aligner}/{ref}_merged.bam",
         bai="data/alignments/{aligner}/{ref}_merged.bam.bai",

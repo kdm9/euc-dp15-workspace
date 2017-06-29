@@ -1,6 +1,7 @@
 qc:
   adapter1: CTGTCTCTTATACACATCTCCGAGCCCACGAGACNNNNNNNNATCTCGTATGCCGTCTTCTGCTTG
   adapter2: CTGTCTCTTATACACATCTGACGCTGCCGACGANNNNNNNNGTGTAGATCTCGGTGGTCGCCGTATCATT
+  minqual: 25
 
 mapping:
   aligners:
@@ -268,9 +269,7 @@ sample_sets:
     "J427a": ["J427a", ]
     "J431": ["J431", ]
     "J432": ["J432", ]
-    "M1c": ["M1c", ]
-    "M2a": ["M2a", ]
-    "M2b": ["M2b", ]
+    "Melliodora_mosaic_merged": ["M1c", "M2a", "M2b"]
     "NCR13": ["NCR13", ]
     "NDU10": ["NDU10", ]
     "NE35955": ["NE35955", ]
