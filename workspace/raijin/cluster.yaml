@@ -18,7 +18,7 @@ unique_kmers:
   time: '0:30:00'
 
 ngmap:
-  time: '6:00:00'
+  time: '12:00:00'
 
 bwamem:
   time: '6:00:00'
@@ -39,6 +39,6 @@ mpileup:
 bcfmerge:
   time: '3:00:00'
 
-angsd_allsteps_split:
-  time: '24:00:00'
-  mem: 8G
+angsd_step1_split:
+  time: '8:00:00'
+  mem: 3800M # 4GB minus a bit so 8*3.8 < 31

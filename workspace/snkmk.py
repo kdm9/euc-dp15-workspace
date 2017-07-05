@@ -83,5 +83,6 @@ def make_sample2run():
 def make_samplesets():
     ssets = defaultdict(list)
     for run in _iter_metadata():
-        ssets[run["series"]].append(run["run"])
-        ssets[run["species"]].append(run["run"])
+        ssets[run["series"]].append(run["sample.jaz"])
+        ssets[run["species"]].append(run["sample.jaz"])
+    return ssets
