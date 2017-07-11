@@ -7,14 +7,18 @@ author: Kevin Murray
 
 ## Re-doing angds
 
+- [ ] Re-map everything to sample-level BAMs
+- [ ] Re-do the angsd stage 2 outputs with all Rose & Jaz's args (Using NGM for now)
+    - [ ] Excess het R script
+- [ ] Re-do mpilup variant calls
+    - [ ] Implement variant filtering
+    - [ ] re-do variant partitioning to use & output the VCF from mpileup
+
+
+## On hold
+
 - [ ] Re-map with stampy: http://www.well.ox.ac.uk/bioinformatics/Software/Stampy-latest.tgz (Back-burnered)
-- [ ] Re-do the angds with all Rose & Jaz's args (Using NGM for now)
-- [ ] Excess het R script work for Rose (feeds into filtering)
 - [ ] work w/ rose for SAF -> treemix format conversion
-- [ ] Implement variant filtering
-
-## Misc
-
 - [ ] Check input format for mixmapper
 - [ ] Work out formulae & method of ANGSD'd abbababa2 multi-pop model
 - [ ] Work out raijin angsd spookyness:
@@ -23,11 +27,30 @@ author: Kevin Murray
 - [ ] Investigate ad-libs (https://github.com/MikkelSchubert/ad-libs) for
   introgression detection
 
+# 2017-07-11 -- Angsd completion
+
+
+## Round 2 stuff
+
+- SAF
+    - check if it can be concatenated
+- MAF
+- beagle GLF
+- snpstat
+- theta
+
+At levels:
+- species sans hybrid
+- series
+
+
+
 # 2017-06-09 -- SNP filtering redux
 
 - remove sites $H_o > 0.8$  in 2 or more populations
 - Beware the depth fiters w/ XO sam flags (din't work for Jaz)
 - Re-run angds on each species to generate hwe
+
 
 # 2017-06-07 -- SNP filtering plans
 
@@ -72,3 +95,4 @@ The filtering pipeline looks like it will be a 2 step process:
  TODO (Completed)
 
 - [x] Snakemake-ify Jaz's first steps of the ANGSD pipeline
+- [x] metadata completion
