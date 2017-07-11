@@ -1,4 +1,30 @@
-# Final metadata
+# Metadata meeting -- 2017-07-11
+
+- VMG14 almost certainly typo for VWG14 (VWG correct)
+- Fix regex for Jxxx<letter> below, so the series metadata merge works
+
+This is the "simpler" metadata set for the computational stuff. It was too hard to get this reconciled with the field data from Excel, so it now has limited columns. I intend to add stuff to this
+
+```{r}
+
+series = read.csv("orig/pop_IDs_noreps.csv", stringsAsFactors=F) %>%
+    select(-stampy, -bwa)
+
+readnum = read.delim("orig/readnum.tsv", stringsAsFactors=F) %>%
+    extract(filename, c("ID"), '.*\\/(\\S+)\\.fastq.gz') %>%
+    mutate(coverage = bases / 640000000)
+
+run2samp = read.csv("run_merging.csv", stringsAsFactors=F)
+
+joined = run2samp %>%
+    left_join(readnum, by=c("run"="ID")) %>%
+    left_join(series, by=c("sample"="indiv"))
+
+write.csv(joined, "clean_metadata.csv", row.names=F)
+
+```
+
+# Old metadata
 
 This is the "final" metadata set including all bits of data
 
