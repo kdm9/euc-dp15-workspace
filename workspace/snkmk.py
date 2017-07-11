@@ -69,20 +69,23 @@ def _iter_metadata():
 def make_run2sample():
     r2s = {}
     for run in _iter_metadata():
-        r2s[run["run"]] = run["sample.jaz"]
+        r2s[run["run"]] = run["sample"]
     return r2s
 
 
 def make_sample2run():
     s2r = defaultdict(list)
     for run in _iter_metadata():
-        s2r[run["sample.jaz"]].append(run["run"])
+        s2r[run["sample"]].append(run["run"])
     return s2r
 
 
 def make_samplesets():
     ssets = defaultdict(list)
+    everything = set()
     for run in _iter_metadata():
-        ssets[run["series"]].append(run["sample.jaz"])
-        ssets[run["species"]].append(run["sample.jaz"])
+        ssets[run["series"]].append(run["sample"])
+        ssets[run["species"]].append(run["sample"])
+        everything.add(run["sample"])
+    ssets["everything"] = everything
     return ssets

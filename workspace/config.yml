@@ -10,7 +10,7 @@ mapping:
   ref: grandis
 
 refs:
-  grandis: data/refs/grandis/Egrandis_v2.fasta
+  grandis: rawdata/refs/grandis/Egrandis_v2.fasta
 
 
 denovodist:
@@ -22,9 +22,9 @@ varcall:
   chunksize: 1000000
   aligners:
     - ngm
-      # - bwa
+    # - bwa
   callers:
-    - freebayes
+    # - freebayes
     - mpileup
   genomes:
     - grandis

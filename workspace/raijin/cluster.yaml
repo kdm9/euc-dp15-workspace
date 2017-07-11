@@ -9,26 +9,22 @@ poolreads:
   time: '0:10:00'
 
 qcreads:
-  time: '2:00:00'
+  time: '3:00:00'
 
 read_count:
   time: '2:00:00'
 
 unique_kmers:
-  time: '0:30:00'
+  time: '2:30:00'
 
 ngmap:
-  time: '12:00:00'
+  time: '18:00:00'
 
 bwamem:
-  time: '6:00:00'
+  time: '8:00:00'
 
 mergebam:
-  time: '4:00:00'
-
-freebayes_ful:
-  time: '160:00:00'
-  jobfs: 400G
+  time: '8:00:00'
 
 freebayes:
   time: '36:00:00'
