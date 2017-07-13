@@ -88,4 +88,4 @@ def make_samplesets():
         ssets[run["species"]].append(run["sample"])
         everything.add(run["sample"])
     ssets["everything"] = everything
-    return ssets
+    return {n: list(sorted(set(s))) for n, s in ssets.items()}
