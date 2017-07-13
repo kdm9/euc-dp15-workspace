@@ -45,11 +45,11 @@ rule denovodist:
         expand("data/mash/k{ksize}-s{sketchsize}/{set}.dist",
                 ksize=config["denovodist"]["ksize"],
                 sketchsize=config["denovodist"]["mash_sketchsize"],
-                set=SAMPLESETS),
+                set=[s for s, v in SAMPLESETS.items() if len(v) >=3]),
         expand("data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
                 ksize=config["denovodist"]["ksize"],
                 sketchsize=config["denovodist"]["kwip_sketchsize"],
-                set=SAMPLESETS),
+                set=[s for s, v in SAMPLESETS.items() if len(v) >=3]),
 
 
 rule all:
@@ -469,8 +469,6 @@ rule kwip:
         k="data/kwip/k{ksize}-s{sketchsize}/{set}.kern",
     log:
         "data/log/kwip/dist/k{ksize}-s{sketchsize}-{set}.log"
-    benchmark:
-        "data/log/bench/kwip/dist/k{ksize}-s{sketchsize}-{set}.log"
     threads:
         16
     shell:
