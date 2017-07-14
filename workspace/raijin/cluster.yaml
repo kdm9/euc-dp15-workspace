@@ -33,7 +33,7 @@ mpileup:
   time: '3:00:00'
 
 bcfmerge:
-  time: '3:00:00'
+  time: '16:00:00'
 
 angsd_step1_split:
   time: '8:00:00'

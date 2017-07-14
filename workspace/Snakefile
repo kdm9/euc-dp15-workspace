@@ -437,7 +437,7 @@ rule countsketch:
     log:
         "data/log/kwip/sketch/k{ksize}-s{sketchsize}-{sample}.log"
     threads:
-        16
+        8
     shell:
         "load-into-counting.py"
         "   -N 1"
@@ -462,11 +462,11 @@ rule kwip:
     log:
         "data/log/kwip/dist/k{ksize}-s{sketchsize}-{set}.log"
     threads:
-        16
+        8
     shell:
         "kwip"
         " -d {output.d}"
         " -k {output.k}"
         " -t {threads}"
         " {input}"
-        " >{log} 2>&1"
+        " >{log} 3>&1"
