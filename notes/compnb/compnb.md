@@ -3,6 +3,58 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
+# 2017-08-02 -- Read number histogram
+
+```R
+library(tidyverse)
+library(ggplot2)
+library(Cairo)
+
+reads = read.delim("data/2017-05-24_readstats/readnum.tsv") %>%
+    mutate(samp = sub("data/reads/(.+)\\.fastq\\.gz", "\\1", filename),
+           cov = bases / 6e8) %>%
+    select(-filename)
+
+reads %>% filter(cov <= 2) %>% arrange(cov)
+
+svg("data/2017-08-02_readnum.svg")
+hist(reads$cov, breaks=20)
+dev.off()
+```
+
+![Read number distribution](data/2017-08-02_readnum.svg)
+
+
+The following have <2x coverage. The J* ones are Jasmine's, the rest are various other people's.
+
+```
+    reads      bases perc_gc non_acgt    samp          cov
+      960     126376    30.8      177  Blank1 0.0002106267
+     1210     132660    39.3      474   Blank 0.0002211000
+     1212     158365    31.9      257  Blank2 0.0002639417
+    11982     486615    43.2     5819 NE37647 0.0008110250
+    16506     676913    43.5     8153 NE25953 0.0011281883
+    39780    1815959    42.0    19630    J397 0.0030265983
+   200804   12901560    40.0    99791 NE10467 0.0215026000
+   245660   14518558    39.8   122087  NE4583 0.0241975967
+   254984   18093647    41.4   126239 NE25923 0.0301560783
+   299816   23046804    42.0   144887 NE36811 0.0384113400
+   354590   24549948    39.8   176110 NE35959 0.0409165800
+   393518   27599976    40.3   194999 NE37169 0.0459999600
+   475562   36350915    41.2   229786 NE67754 0.0605848583
+  1572690  175924084    36.2   629978   NBJ30 0.2932068067
+  3588774  313753695    38.9  1697607   VWG14 0.5229228250
+  4204536  363807300    39.2  2045393 NE90535 0.6063455000
+  4851898  457610615    38.8  2187811   NAL05 0.7626843583
+  5033476  458358066    39.2  2388230   VMG14 0.7639301100
+  5809342  573101877    38.8  2515265   NCD30 0.9551697950
+  6473536  648939562    38.5  2744364   NDU10 1.0815659367
+  7211498  740407938    38.7  3003109   FDK10 1.2340132300
+  9303894 1006740326    39.3  3632042   NCR13 1.6779005433
+  9925972 1027584331    38.9  4058834    J376 1.7126405517
+ 13071834 1156693706    38.4  6385443 NE35955 1.9278228433
+```
+
 # 2017-05-30 -- TerrorStructure
 
 ...as I'm now calling it.
