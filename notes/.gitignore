@@ -6,3 +6,4 @@
 pandoc.out
 .~*#
 *.bak
+!data/**
