@@ -259,8 +259,8 @@ col = c(brewer.pal(12, "Paired"), 'black', '#666666', 'blue', 'pink')
 m = as.matrix(read.delim("data/2017-05-22_kwip-k21-s1e9/nooutlier.dist", row.names=1))
 d = as.dist(m)
 
-meta = read.csv("../metadata/cleaned/metadata.csv", stringsAsFactors=F)
-meta = meta[match(rownames(m), meta$ID),]
+meta = read.csv("data/2017-05-22_metadata.csv", stringsAsFactors=F)
+meta = meta[match(rownames(m), meta$run),]
 ```
 
 
@@ -275,10 +275,10 @@ pc = cmdscale(d, k=9, eig=T)
 pctcontrib = pc$eig / sum(pc$eig)
 pc = pc$points
 pc.df = data.frame(PC1=pc[,1], PC2=pc[,2], ID=rownames(pc)) %>%
-        left_join(meta, by="ID")
+	left_join(meta, by=c("ID"="run"))
 
 svg("data/2017-05-22_kwip-scree.svg")
-plot(cumsum(pctcontrib), type='lp', main="Scree plot (kWIP)", xlab="PC",
+plot(cumsum(pctcontrib), type='b', main="Scree plot (kWIP)", xlab="PC",
         ylab="Proportion of variance (culmulative)")
 dev.off()
 ```
@@ -324,14 +324,14 @@ dev.off()
 m = as.matrix(read.delim("data/2017-05-22_mash-k21-s1e5/nooutlier.dist", row.names=1))
 d = as.dist(m)
 
-meta = read.csv("../metadata/cleaned/metadata.csv", stringsAsFactors=F)
+meta = read.csv("data/2017-05-22_metadata.csv", stringsAsFactors=F)
 meta = meta[match(rownames(m), meta$ID),]
 
 pc = cmdscale(d, k=9, eig=T)
 pctcontrib = pc$eig / sum(pc$eig)
 pc = pc$points
 pc.df = data.frame(PC1=pc[,1], PC2=pc[,2], ID=rownames(pc)) %>%
-        left_join(meta, by="ID")
+	left_join(meta, by=c("ID"="run"))
 
 svg("data/2017-05-22_mash-scree.svg")
 plot(cumsum(pctcontrib), type='lp', main="Scree plot (Mash)", xlab="PC",
@@ -427,11 +427,7 @@ following:
 
 ![neighbour joining of same](data/2017-05-01_euc-nj-pass.svg)
 
-Seems as though the trees haven't changed much, we have just removed the
-samples that make no sense. Also worth noting that the NJ tree is fairly funky,
-particularly that mollucana that sticks out. Though it's the same sample as the
-outlier in the hclust result, so it is probably topologically consistent, and
-just need re-rooting. I suspect J354 is also fairly crappy as samples go.
+Seems as though the trees haven't changed much, we have just removed the samples that make no sense. Also worth noting that the NJ tree is fairly funky, particularly that mollucana that sticks out. Though it's the same sample as the outlier in the hclust result, so it is probably topologically consistent, and just need re-rooting. I suspect J354 is also fairly crappy as samples go.
 
 
 #### 2017-05-02 update
@@ -445,9 +441,7 @@ the species)
 
 # 2017-04-27 -- Mash re-run
 
-Did a re-run of the MASH tree with k=21 and sketch size of 10000. This one
-includes all the samples off plate 2, sans the blanks (and without merging tech
-reps).
+Did a re-run of the MASH tree with k=21 and sketch size of 10000. This one includes all the samples off plate 2, sans the blanks (and without merging tech reps).
 
 ![**Mash tree (via hclust).**](data/2017-04-27_euc-dendro.svg)
 
@@ -458,10 +452,7 @@ However, the mash tree does raise a couple of issues:
 - There are a few samples without species annotation, meaning they're not in
   the metadata
 
-![**PCoA of mash.**
-The PCoA of mash is a bit funky. The number of distinct colours isn't that
-high, it probably would look better plotted coloured by series rather than
-spp](data/2017-04-27_euc-pca.svg)
+![**PCoA of mash.** The PCoA of mash is a bit funky. The number of distinct colours isn't that high, it probably would look better plotted coloured by series rather than spp](data/2017-04-27_euc-pca.svg)
 
 
 
