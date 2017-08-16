@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -q normal
-#PBS -l ncpus=16
-#PBS -l walltime=48:00:00
+#PBS -l ncpus=12
+#PBS -l walltime=18:00:00
 #PBS -l mem=31G
 #PBS -l jobfs=300G
 #PBS -l other=gdata1
@@ -18,8 +18,10 @@ source raijin/modules.sh
 
 snakemake --unlock
 
-snakemake                                \
-    --snakefile ${SNAKEFILE:-Snakefile}  \
-    -j 16                                \
-    --rerun-incomplete                   \
-    >>data/log/`date +%Y-%m-%d`_${PBS_JOBNAME}-snakemake.log 2>&1
+snakemake                                                         \
+    --snakefile ${SNAKEFILE:-Snakefile}                           \
+    -j 16                                                         \
+    --rerun-incomplete                                            \
+    all                                                           \
+    >>data/log/`date +%Y-%m-%d`_${PBS_JOBNAME}-snakemake.log 2>&1 \
+
