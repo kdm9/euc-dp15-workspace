@@ -1,3 +1,32 @@
+# Metadata redux -- 2017-08-21
+
+Re-running the below code as we found an in-lab mix-up by Alison.
+
+```{r}
+library(tidyverse)
+
+collections = read.csv("orig/Collection_Eucs_2015_kdm_edited.csv",
+                       stringsAsFactors=F) %>%
+    rename(TotalNumSamples=Total...samples, TagNum = Tag..)
+
+series = read.csv("orig/pop_IDs_noreps.csv", stringsAsFactors=F) %>%
+    select(-stampy, -bwa, -state, -location)
+
+readnum = read.delim("orig/readnum.tsv", stringsAsFactors=F) %>%
+    extract(filename, c("ID"), '.*\\/(\\S+)\\.fastq.gz') %>%
+    mutate(coverage = bases / 640000000)
+
+run2samp = read.csv("run_merging.csv", stringsAsFactors=F)
+
+joined = run2samp %>%
+    left_join(readnum, by=c("run"="ID")) %>%
+    left_join(series, by=c("sample.repsmerged"="indiv")) %>%
+    left_join(collections, by=c("sample.repsmerged"="ID"))
+
+write.csv(joined, "clean_metadata.csv", row.names=F)
+
+```
+
 # Metadata meeting -- 2017-07-11
 
 - VMG14 almost certainly typo for VWG14 (VWG correct)
