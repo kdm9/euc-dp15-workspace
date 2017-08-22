@@ -11,6 +11,7 @@ CHROMOSOMES = snkmk.make_chroms(config["refs"])
 SAMPLESETS = snkmk.make_samplesets()
 
 localrules: qc, map, varcall, angsd, denovodist, all
+
 rule qc:
     input:
         expand("data/reads/samples/{sample}.fastq.gz", sample=SAMPLE2RUN),
@@ -61,6 +62,7 @@ rule all:
         rules.denovodist.input,
 
 
+localrules: qcreads
 rule qcreads:
     input:
         r1=lambda wc: RUN2FILE[wc.run]["R1"],
@@ -71,7 +73,7 @@ rule qcreads:
         log="data/log/adapterremoval/{run}.log",
         settings="data/stats/adapterremoval/{run}.txt",
     threads:
-        8
+        4
     params:
         adp1=config["qc"]["adapter1"],
         adp2=config["qc"]["adapter2"],
@@ -94,22 +96,24 @@ rule qcreads:
         "   --output1 {output.reads}"
         " >{log.log} 2>&1"
 
+localrules: poolreads
 rule poolreads:
     input:
         reads=lambda wc: expand("data/reads/runs/{run}.fastq.gz", run=SAMPLE2RUN[wc.sample]),
     output:
         reads="data/reads/samples/{sample}.fastq.gz",
-    threads: 16
+    threads: 4
     shell:
         "zcat {input} | pigz -p {threads} -7 >{output}"
 
+localrules: read_count
 rule read_count:
     input:
         expand("data/reads/runs/{run}.fastq.gz", run=RUN2FILE),
     output:
         "data/readstats/readnum.tsv",
     threads:
-        16
+        8
     log:
         "data/log/readstats/seqhax-stats.log",
     shell:
@@ -119,13 +123,14 @@ rule read_count:
         "    >{output}"
         " ) 2>{log}"
 
+localrules: unique_kmers
 rule unique_kmers:
     input:
         expand("data/reads/runs/{run}.fastq.gz", run=RUN2FILE),
     output:
         "data/readstats/unique-kmers.tsv",
     threads:
-        16
+        8
     params:
         kmersize=31,
     log:
@@ -331,6 +336,7 @@ rule angsd_step1_split:
         snppval=config["angsd"].get("snppval", 1/1000),
         minq=config["angsd"].get("minq", 1),
         minmapq=config["angsd"].get("minmapq", 1),
+        minmaf=config["angsd"].get("minmaf", 0.0),
     threads: 2
     shell:
         "T=$(mktemp -d); trap \"rm -rf $T\" EXIT &&"
@@ -352,9 +358,79 @@ rule angsd_step1_split:
         "   -snp_pval {params.snppval}"
         "   -minMapQ {params.minmapq}"
         "   -minQ  {params.minq}"
+        "   -minMaf  {params.minmaf}"
         "   -skipTriallelic 1"
         " ) >{log} 2>&1"
 
+localrules: angsd_step1_filter
+rule angsd_step1_filter:
+    input:
+        hwe="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.hwe.gz",
+        stat="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.snpStat.gz",
+    output:
+        sites="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.sites",
+        stats="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.sitestats.tsv",
+    log:
+        "data/log/angsd/step1_filter/{aligner}/{ref}/{set}/{region}.log"
+    params:
+        minMAD=config["angsd"].get("minMAD", 1),
+    threads: 2
+    shell:
+        "( ./scripts/snpStat2sites.R"
+        "   $(dirname {input.hwe})/$(basename {input.hwe} .hwe.gz)"
+        "   $(dirname {output.sites})/$(basename {output.sites} .sites)"
+        " ) >{log} 2>&1"
+
+
+rule angsd_step2_split:
+    input:
+        bams=lambda wc: ["data/alignments/{aligner}/{ref}/{sample}.bam".format(
+                             aligner=wc.aligner, ref=wc.ref, sample=s)
+                         for s in sorted(SAMPLESETS[wc.set])],
+        ref=lambda wc: config['refs'][wc.ref],
+        sites="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.sites",
+    output:
+        arg="data/angsd/step2/{aligner}/{ref}/{set}/split/{region}.arg",
+        hwe="data/angsd/step2/{aligner}/{ref}/{set}/split/{region}.hwe.gz",
+        stat="data/angsd/step2/{aligner}/{ref}/{set}/split/{region}.snpStat.gz",
+    log:
+        "data/log/angsd/step2/{aligner}/{ref}/{set}/{region}.log"
+    params:
+        regionarg=lambda wc: "" if wc.region == "genomewide" else "-rf $T/regions",
+        regions=lambda wc: " ".join(CHROMOSOMES[wc.ref][wc.region]),
+        gl=config["angsd"].get("glmethod", 2),
+        minind=config["angsd"].get("minind", 1),
+        mindp=config["angsd"].get("mindepth", 1),
+        maxdp=config["angsd"].get("maxdepth", 1000),
+        snppval=config["angsd"].get("snppval", 1/1000),
+        minq=config["angsd"].get("minq", 1),
+        minmapq=config["angsd"].get("minmapq", 1),
+        minmaf=config["angsd"].get("minmaf", 0.0),
+    threads: 2
+    shell:
+        "T=$(mktemp -d); trap \"rm -rf $T\" EXIT &&"
+        "echo {input.bams} | tr ' ' '\\n' > $T/bamfile && "
+        "echo {params.regions} | tr ' ' '\\n' > $T/regions && "
+        "( angsd"
+        "   -bam $T/bamfile"
+        "   {params.regionarg}"
+        "   --sites {input.sites}"
+        "   -P {threads}"
+        "   -doCounts 1"
+        "   -doMaf 1"
+        "   -doMajorMinor 1"
+        "   -doSNPStat 1"
+        "   -baq 1"
+        "   -anc {input.ref}"
+        "   -ref {input.ref}"
+        "   -out $(dirname {output.arg})/$(basename {output.arg} .arg)"
+        "   -GL {params.gl}"
+        "   -snp_pval {params.snppval}"
+        "   -minMapQ {params.minmapq}"
+        "   -minQ  {params.minq}"
+        "   -minMaf  {params.minmaf}"
+        "   -skipTriallelic 1"
+        " ) >{log} 2>&1"
 
 #--------------------------------------------------------------------------------
 #-                               de novo distance                               -

@@ -11,12 +11,6 @@ poolreads:
 qcreads:
   time: '3:00:00'
 
-read_count:
-  time: '2:00:00'
-
-unique_kmers:
-  time: '2:30:00'
-
 ngmap:
   time: '18:00:00'
 

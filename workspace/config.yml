@@ -38,6 +38,8 @@ angsd:
   minq: 30
   snppval: 1e-3
   minind: 10
+  minmaf: 0.02
+  minMAD: 3 # Number of reads with minor alle
   glmethod: 2 # gatk
   aligners:
     - ngm

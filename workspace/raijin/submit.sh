@@ -1,8 +1,8 @@
 #!/bin/bash
 #PBS -q express
-#PBS -l ncpus=1
+#PBS -l ncpus=16
 #PBS -l walltime=24:00:00
-#PBS -l mem=8G
+#PBS -l mem=63G
 #PBS -l jobfs=300G
 #PBS -l other=gdata1
 #PBS -l wd
@@ -24,12 +24,7 @@ else
   mkdir -p $logdir
 fi
 
-# if [ -d ".kdmwrappers/.git" ]
-# then
-#     cd .kdmwrappers && git pull && cd ..
-# else
-#     git clone 'https://github.com/kdmurray91/snakemake-wrappers.git' .kdmwrappers
-# fi
+source raijin/modules.sh
 
 QSUB="qsub -q {cluster.queue} -l ncpus={threads} -l jobfs={cluster.jobfs}"
 QSUB="$QSUB -l walltime={cluster.time} -l mem={cluster.mem} -N {cluster.name}"
@@ -41,6 +36,7 @@ snakemake --unlock
 snakemake                                \
     -j 500                               \
     --cluster-config raijin/cluster.yaml \
+    --local-cores 16                     \
     --js raijin/jobscript.sh             \
     --rerun-incomplete                   \
     --keep-going                         \
