@@ -9,7 +9,7 @@ all: $(TARGETS)
 clean:
 	rm -f $(TARGETS)
 
-upload:
+upload: $(TARGETS)
 	scp $(TARGETS) $(UPLOAD_TO)
 
 %.html: %.md $(shell find data/)
