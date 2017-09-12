@@ -37,9 +37,12 @@ rule varcall:
 
 rule angsd:
     input:
-        stat=expand("data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.snpStat.gz",
+        step1=expand("data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.snpStat.gz",
                     aligner=config["angsd"]["aligners"], ref=config["angsd"]["genome"],
-                    set=SAMPLESETS,  region=CHROMOSOMES[config["angsd"]["genome"]])
+                    set=SAMPLESETS, region=CHROMOSOMES[config["angsd"]["genome"]]),
+        step2=expand("data/angsd/step2/{aligner}/{ref}/{set}/split/{region}.snpStat.gz",
+                    aligner=config["angsd"]["aligners"], ref=config["angsd"]["genome"],
+                    set=SAMPLESETS, region=CHROMOSOMES[config["angsd"]["genome"]]),
 
 rule denovodist:
     input:
@@ -297,7 +300,7 @@ rule bcfmerge:
         bcf="data/variants/{caller}/{aligner}/{ref}.bcf",
     log:
         "data/log/mergebcf/{caller}/{aligner}/{ref}.log"
-    threads: 2
+    threads: 16
     shell:
         "( bcftools concat"
         "   --allow-overlaps"
@@ -306,6 +309,7 @@ rule bcfmerge:
         "   -O b"
         "   -o {output.bcf}"
         "   {input.bcf}"
+        " && bcftools index -f {output.bcf}"
         " ) >{log} 2>&1"
 
 
@@ -314,12 +318,25 @@ rule bcfmerge:
 #--------------------------------------------------------------------------------
 
 
+rule angsd_bamfile:
+    input:
+        bams=lambda wc: ["data/alignments/{aligner}/{ref}/{sample}.bam".format(
+                             aligner=wc.aligner, ref=wc.ref, sample=s)
+                         for s in sorted(SAMPLESETS[wc.set])],
+    output:
+        bamfile="data/angsd/{aligner}/{ref}/{set}.bamfile",
+    run:
+        with open(output.bamfile, 'w') as fh:
+            for bam in sorted(input.bams):
+                print(bam, file=fh)
+
 rule angsd_step1_split:
     input:
         bams=lambda wc: ["data/alignments/{aligner}/{ref}/{sample}.bam".format(
                              aligner=wc.aligner, ref=wc.ref, sample=s)
                          for s in sorted(SAMPLESETS[wc.set])],
         ref=lambda wc: config['refs'][wc.ref],
+        bamfile="data/angsd/{aligner}/{ref}/{set}.bamfile",
     output:
         arg="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.arg",
         hwe="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.hwe.gz",
@@ -340,10 +357,9 @@ rule angsd_step1_split:
     threads: 2
     shell:
         "T=$(mktemp -d); trap \"rm -rf $T\" EXIT &&"
-        "echo {input.bams} | tr ' ' '\\n' > $T/bamfile && "
         "echo {params.regions} | tr ' ' '\\n' > $T/regions && "
         "( angsd"
-        "   -bam $T/bamfile"
+        "   -bam {input.bamfile}"
         "   {params.regionarg}"
         "   -P {threads}"
         "   -doCounts 1"
@@ -370,15 +386,18 @@ rule angsd_step1_filter:
     output:
         sites="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.sites",
         stats="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.sitestats.tsv",
+        binsites="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.sites.bin",
+        binsitesidx="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.sites.idx",
     log:
         "data/log/angsd/step1_filter/{aligner}/{ref}/{set}/{region}.log"
     params:
         minMAD=config["angsd"].get("minMAD", 1),
-    threads: 2
+    threads: 1
     shell:
         "( ./scripts/snpStat2sites.R"
         "   $(dirname {input.hwe})/$(basename {input.hwe} .hwe.gz)"
         "   $(dirname {output.sites})/$(basename {output.sites} .sites)"
+        " && angsd sites index {output.sites}"
         " ) >{log} 2>&1"
 
 
@@ -389,6 +408,8 @@ rule angsd_step2_split:
                          for s in sorted(SAMPLESETS[wc.set])],
         ref=lambda wc: config['refs'][wc.ref],
         sites="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.sites",
+        binsites="data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.sites.bin",
+        bamfile="data/angsd/{aligner}/{ref}/{set}.bamfile",
     output:
         arg="data/angsd/step2/{aligner}/{ref}/{set}/split/{region}.arg",
         hwe="data/angsd/step2/{aligner}/{ref}/{set}/split/{region}.hwe.gz",
@@ -406,20 +427,25 @@ rule angsd_step2_split:
         minq=config["angsd"].get("minq", 1),
         minmapq=config["angsd"].get("minmapq", 1),
         minmaf=config["angsd"].get("minmaf", 0.0),
-    threads: 2
+    threads: 1
     shell:
         "T=$(mktemp -d); trap \"rm -rf $T\" EXIT &&"
-        "echo {input.bams} | tr ' ' '\\n' > $T/bamfile && "
         "echo {params.regions} | tr ' ' '\\n' > $T/regions && "
         "( angsd"
-        "   -bam $T/bamfile"
+        "   -bam {input.bamfile}"
         "   {params.regionarg}"
-        "   --sites {input.sites}"
+        "   -sites {input.sites}"
         "   -P {threads}"
         "   -doCounts 1"
-        "   -doMaf 1"
+        "   -doGeno 4"
         "   -doMajorMinor 1"
+        "   -doGlf 2"
+        "   -doMaf 2"
+        "   -doPost 1"
+        "   -doIBS 1"
+        "   -doPlink 2"
         "   -doSNPStat 1"
+        "   -doSaf 1"
         "   -baq 1"
         "   -anc {input.ref}"
         "   -ref {input.ref}"

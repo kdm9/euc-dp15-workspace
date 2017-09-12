@@ -3,7 +3,7 @@ library(dplyr, quietly=T, warn.conflicts=F)
 library(tidyr, quietly=T, warn.conflicts=F)
 
 
-filterHWE <- function(hweFile, maxHo=0.8, minHWEPval=0.05) {
+filterHWE <- function(hweFile, maxHo=0.8, minHWEPval=0) {
     read.delim(hweFile) %>%
         mutate(He = 2*Freq*(1-Freq),
                Ho = He-(He * F)) %>%
@@ -24,7 +24,6 @@ filterSnpStat <- function(snpstatFile, minMAD=2) {
 
 
 main <- function(basename, outbase) {
-    basename = "data/angsd/step1/ngm/grandis/everything/split/scaffolds"
     hwe = filterHWE(paste0(basename, ".hwe.gz"))
     snpstat = filterSnpStat(paste0(basename, ".snpStat.gz"))
     merged = inner_join(hwe, snpstat, by=c("Chromo", "Position"))
