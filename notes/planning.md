@@ -3,6 +3,16 @@ title: Planning notebook for Euc projects
 author: Kevin Murray
 ---
 
+# 2017-08-25
+
+remove hwe pval from everything and re-run for jaz immediately
+
+then do split by sp, seri, and everything
+    - spp: hwe 0.05, ho .7, not MAD
+    - series: ho .7, MAD 5
+    - everything: ho .7, MAD 5
+
+
 # Current TODOs:
 
 ## Re-doing angds
