@@ -3,6 +3,91 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
+# 2017-09-12 -- Ramacotti test run of sequencing
+
+This is the stats as reported by RAMAC, as the Stats/Stats.json file converted to a tsv.
+
+
+```
+library(tidyverse)
+
+metadata = read.csv("data/2017-09-12_ramac-read-stats/ramac_sample_sheet.csv") %>%
+    mutate(Sample_Plate=as.factor(Sample_Plate))
+str(metadata)
+rstats = read.delim("data/2017-09-12_ramac-read-stats/ilumina_stats.tsv") %>%
+    mutate(lane = as.factor(lane))
+str(rstats)
+ramac =  left_join(rstats, metadata, by=c("id"="Sample_ID"))
+str(ramac)
+
+ramac.total = group_by(ramac, id, Sample_Plate, Sample_Well, Sample_Name) %>%
+    summarise(nreads = sum(nreads), nbases = sum(nbases))
+
+svg("data/2017-09-12_ramac-read-stats/readstat.svg")
+ggplot(ramac.total, aes(Sample_Plate, nbases)) +
+    geom_violin()
+dev.off()
+
+```
+
+![**Read number distribution:** It appears that plate 4 has way higher concentration than the other plates. Plate 2 has lower concentration, and a whole bunch near zero (the ones near zero are expected, the NE samples just won't work). It also looks like Plate 1 is a bit low.](data/2017-09-12_ramac-read-stats/readstat.svg)
+
+### ANOVA for some numbers:
+
+```{r}
+> m = aov(nbases ~ Sample_Plate, data=ramac.total)
+> summary(m)
+               Df    Sum Sq   Mean Sq F value Pr(>F)
+Sample_Plate    5 3.848e+16 7.696e+15    1344 <2e-16 ***
+Residuals    2106 1.206e+16 5.726e+12
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+```
+
+No surprise, but the coefficients are what's important:
+
+```
+> cm = coef(m)
+> print(cm)
+  (Intercept) Sample_Plate2 Sample_Plate3 Sample_Plate4 Sample_Plate5
+      3049950      -1192567       2370796      12073913       2105682
+Sample_Plate6
+      3024298
+```
+
+Relative to the intercept (Plate 1) that's:
+
+```{r}
+> print(cm/cm[1] + c(0, 1, 1, 1, 1, 1))
+  (Intercept) Sample_Plate2 Sample_Plate3 Sample_Plate4 Sample_Plate5
+    1.0000000     0.6089879     1.7773229     4.9587242     1.6903988
+Sample_Plate6
+    1.9915892
+```
+
+That's not great, plate 4 has much higher coverage than the rest of the plates.
+
+Alternatively:
+
+```{r}
+platesum = group_by(ramac.total, Sample_Plate) %>%
+    summarise(myield = mean(nbases),
+              sdyield = sd(nbases)) %>%
+    mutate(mbyield = myield/1e6)
+```
+
+gives:
+
+```
+Sample_Plate   myield  sdyield   mbyield
+           1 12199802  4401052 12.199802
+           2  7429532  5088101  7.429532
+           3 21682987  7311461 21.682987
+           4 60495452 17916117 60.495452
+           5 20622530  6513409 20.622530
+           6 24296994  6067127 24.296994
+```
+
 # 2017-08-02 -- Read number histogram
 
 ```R
