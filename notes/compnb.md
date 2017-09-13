@@ -3,13 +3,60 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
-# 2017-09-12 -- Ramacotti test run of sequencing
+# 2017-09-13 -- Ramacotti test run insert sizes
 
-This is the stats as reported by RAMAC, as the Stats/Stats.json file converted to a tsv.
+This has been made using BWA alignment to the grandis reference, then `samtools stats` to generate the insert size distribution. The distribution has been truncated at 750bp, there is very little larger than that. This is of course only across the fragments where both pairs could be mapped as a valid, inward-facing pair, but this shouldn't affect the result.
+
+```{r}
+library(tidyverse)
+library(ggjoy)
+
+metadata = read.csv("data/2017-09-12_ramac-read-stats/ramac_sample_sheet.csv") %>%
+    mutate(Sample_Plate=as.factor(Sample_Plate))
+str(metadata)
+
+isz = read.delim("data/2017-09-13_ramac-insert-size/all-insert-sizes.tsv.gz",
+                 header=F, col.names=c("sample", "size", "total", "inward", "outward", "other")) %>%
+    select(sample, size, total, inward) %>%
+    filter(size <= 750) %>%
+    group_by(sample, size) %>%
+    summarise(total=sum(total), inward=sum(inward)) %>%
+    extract(sample, into=c("SampleName", "SampleID"), regex="(.+)_(S\\d+)") %>%
+    left_join(metadata, by=c("SampleName" = "Sample_Name"))
+str(isz)
+
+isz.sum = isz %>%
+    group_by(Sample_Plate, size)  %>%
+    summarise(total=sum(total), inward=sum(inward))
+str(isz.sum)
+
+isz.cut = isz %>%
+    group_by(SampleName) %>%
+    mutate(size = cut(size, c(seq(0, 1000, 10), 8001), right=T, include.lowest=T, labels=F)*10)
+
+library(Cairo)
+svg("data/2017-09-13_ramac-insert-size/insertionsize.svg")
+ggplot(isz.sum, aes(size, Sample_Plate, height=inward)) +
+    geom_joy(aes(colour=Sample_Plate, fill=Sample_Plate), stat="identity", alpha=0.7) +
+    scale_fill_cyclical(values = c("blue", "green")) +
+    scale_colour_cyclical(values = c("blue", "green")) +
+    labs(x="Insert Size (bp)", y="Plate") +
+    theme_bw()
+dev.off()
 
 
 ```
+
+![**Insertion size distribution:** Looks like the fragment sizes are lower than we'd hope for. it would be good to check this against the bioanalyser. They do at least seem reasonably consistent across plates.](data/2017-09-13_ramac-insert-size/insertionsize.svg)
+
+
+# 2017-09-12 -- Ramacotti test run of sequencing
+
+These are the stats as reported by RAMAC, as the Stats/Stats.json file converted to a tsv.
+
+```
 library(tidyverse)
+library(Cairo)
 
 metadata = read.csv("data/2017-09-12_ramac-read-stats/ramac_sample_sheet.csv") %>%
     mutate(Sample_Plate=as.factor(Sample_Plate))
