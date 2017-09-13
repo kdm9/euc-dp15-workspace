@@ -3,6 +3,39 @@ title: Computational notebook for euc project
 author: Kevin Murray
 ---
 
+# 2017-09-13 -- Yield from Ramacotti vs lab quantifications
+
+This plots the measures of total concentration of each pool against actual yield (# reads). These three measures are the volume added * the concentration as judged by the qubit or bioanalyser (in the 300-800 range). Ash: these are the last three columns of your spread-sheet.
+
+```{r}
+library(tidyverse)
+library(Cairo)
+
+yield = read.csv("data/2017-09-12_ramac-read-stats/total-reads-per-samp.csv") %>%
+    group_by(Sample_Plate) %>%
+    summarise(nreads=sum(as.numeric(nreads)), nbases=sum(as.numeric(nbases)))
+str(yield)
+
+quant = read.csv("data/2017-09-13_quant-vs-yield/euc_pool_concs.csv") %>%
+    gather("measure", "concentration", -Plate)
+
+quant.total = quant %>%
+    filter(grepl('^Total', measure))
+
+y_vs_q = left_join(yield, quant.total, by=c("Sample_Plate"="Plate")) %>%
+    mutate(Sample_Plate = as.factor(Sample_Plate))
+
+svg("data/2017-09-13_quant-vs-yield/quant-vs-yield.svg", width=7, height=4)
+ggplot(y_vs_q, aes(y=nreads, x=concentration)) +
+    geom_point(aes(colour=Sample_Plate), size=5) +
+    facet_wrap(~measure, scales="free") +
+    theme_bw() +
+    theme(legend.position="bottom")
+dev.off()
+```
+
+![**Quantification methods vs acutal yield:** It appears that the bioanalyser-based quantifications are not as accurate a predictor of yield when compared to the qubit. This is odd, as one would expect that the number of reads is proportional to the number of fragments (molarity), rather than the mass of DNA.](data/2017-09-13_quant-vs-yield/quant-vs-yield.svg)
+
 # 2017-09-13 -- Ramacotti test run insert sizes
 
 This has been made using BWA alignment to the grandis reference, then `samtools stats` to generate the insert size distribution. The distribution has been truncated at 750bp, there is very little larger than that. This is of course only across the fragments where both pairs could be mapped as a valid, inward-facing pair, but this shouldn't affect the result.
@@ -69,6 +102,7 @@ str(ramac)
 
 ramac.total = group_by(ramac, id, Sample_Plate, Sample_Well, Sample_Name) %>%
     summarise(nreads = sum(nreads), nbases = sum(nbases))
+write.csv(ramac.total, "data/2017-09-12_ramac-read-stats/total-reads-per-samp.csv", row.names=F)
 
 svg("data/2017-09-12_ramac-read-stats/readstat.svg")
 ggplot(ramac.total, aes(Sample_Plate, nbases)) +
