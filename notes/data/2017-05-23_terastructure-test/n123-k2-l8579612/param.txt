@@ -1,3 +1,34 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:a35954c23197b53bc232016eeb7a591869051da0e3fda8819fd86e00850a7d54
-size 699
+n: 123
+k: 2
+t: 2
+l: 8579612
+nthreads: 16
+tau0: 1.000000000
+nodetau0: 1.000000000
+kappa: 0.500000000
+nodekappa: 0.500000000
+alpha: 0.500000000
+heldout_indiv_ratio: 0.001000000
+validation_ratio: 0.005000000
+online_iterations: 10
+GSL seed: 0.000000000
+file suffix: False
+save beta: False
+adagrad: False
+indiv sample size: 12
+blocks: 10
+compute_beta: False
+stop_threshold: 0.000010000
+missing snps: 0
+0s snps: 946384523
+1s snps: 103417530
+2s snps: 5490223
+individuals n: 123
+locations l: 8579612
+populations k: 2
+validation snps per location: 12
+validation locations: 42898
+total validation snps: 514776
+(VAL1) total validation snps (check): 514776
+test ratio: 0.005000000
+validation ratio: 0.005000000
