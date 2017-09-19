@@ -40,6 +40,8 @@ dev.off()
 
 This has been made using BWA alignment to the grandis reference, then `samtools stats` to generate the insert size distribution. The distribution has been truncated at 750bp, there is very little larger than that. This is of course only across the fragments where both pairs could be mapped as a valid, inward-facing pair, but this shouldn't affect the result.
 
+**Addendum 2017-09-19:** Added in stats from a merged run of all plates 1 & 2 from the old run
+
 ```{r}
 library(tidyverse)
 library(ggjoy)
@@ -51,7 +53,7 @@ str(metadata)
 isz = read.delim("data/2017-09-13_ramac-insert-size/all-insert-sizes.tsv.gz",
                  header=F, col.names=c("sample", "size", "total", "inward", "outward", "other")) %>%
     select(sample, size, total, inward) %>%
-    filter(size <= 750) %>%
+    filter(size <= 1000) %>%
     group_by(sample, size) %>%
     summarise(total=sum(total), inward=sum(inward)) %>%
     extract(sample, into=c("SampleName", "SampleID"), regex="(.+)_(S\\d+)") %>%
@@ -62,6 +64,13 @@ isz.sum = isz %>%
     group_by(Sample_Plate, size)  %>%
     summarise(total=sum(total), inward=sum(inward))
 str(isz.sum)
+
+isz.oldplate12 = read.delim("data/2017-09-13_ramac-insert-size/plates-1-2-original-runs-merged.tsv",
+                 header=F, col.names=c("Sample_Plate", "size", "total", "inward", "outward", "other")) %>%
+    filter(size <= 1000) %>%
+    select(Sample_Plate, size, total, inward)
+
+isz.sum = bind_rows(isz.sum, isz.oldplate12)
 
 isz.cut = isz %>%
     group_by(SampleName) %>%
@@ -77,11 +86,19 @@ ggplot(isz.sum, aes(size, Sample_Plate, height=inward)) +
     theme_bw()
 dev.off()
 
-
+svg("data/2017-09-13_ramac-insert-size/insertionsize-allpairs.svg")
+ggplot(isz.sum, aes(size, Sample_Plate, height=total)) +
+    geom_joy(aes(colour=Sample_Plate, fill=Sample_Plate), stat="identity", alpha=0.7) +
+    scale_fill_cyclical(values = c("blue", "green")) +
+    scale_colour_cyclical(values = c("blue", "green")) +
+    labs(x="Insert Size (bp)", y="Plate") +
+    theme_bw()
+dev.off()
 ```
 
-![**Insertion size distribution:** Looks like the fragment sizes are lower than we'd hope for. it would be good to check this against the bioanalyser. They do at least seem reasonably consistent across plates.](data/2017-09-13_ramac-insert-size/insertionsize.svg)
+![**Insertion size distribution:** Looks like the fragment sizes are lower than we'd hope for. it would be good to check this against the bioanalyser. They do at least seem reasonably consistent across plates. Note, this is only inward facing pairs.](data/2017-09-13_ramac-insert-size/insertionsize.svg)
 
+![**Insertion size distribution:** This one is the same, but for all pair orientations. The step change around 75 isn't due to outward facing pairs.](data/2017-09-13_ramac-insert-size/insertionsize-allpairs.svg)
 
 # 2017-09-12 -- Ramacotti test run of sequencing
 
