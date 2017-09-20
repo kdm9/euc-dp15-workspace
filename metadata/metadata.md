@@ -1,3 +1,37 @@
+# Metadata complete re-do-- 2017-09-20
+
+This is a complete re-do from Jaz's latest metadata table
+
+```{r}
+library(tidyverse)
+
+collections = read.csv("orig/Collection_Eucs_2015_kdm_edited.csv",
+                       stringsAsFactors=F)
+str(collections)
+
+series = read.csv("orig/pop_IDs_noreps.csv", stringsAsFactors=F) %>%
+    select(-stampy, -bwa) %>%
+    rename(state.pop=state, location.pop=location)
+str(series)
+
+readnum = read.delim("orig/readnum.tsv", stringsAsFactors=F) %>%
+    extract(filename, c("id"), '.*\\/(\\S+)\\.fastq.gz') %>%
+    mutate(coverage = bases / 640000000)
+str(readnum)
+
+run2samp = read.csv("run_merging.csv", stringsAsFactors=F)
+str(run2samp)
+
+joined = run2samp %>%
+    left_join(readnum, by=c("run"="id")) %>%
+    left_join(series, by=c("individual"="indiv")) %>%
+    left_join(collections, by=c("individual"="collection.id"))
+str(joined)
+
+write.csv(joined, "clean_metadata.csv", row.names=F)
+```
+
+
 # Metadata redux -- 2017-08-21
 
 Re-running the below code as we found an in-lab mix-up by Alison.
