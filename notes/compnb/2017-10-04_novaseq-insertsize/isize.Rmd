@@ -38,7 +38,7 @@ ggplot(isz.plate, aes(size, Sample_Plate, height=inward)) +
 
 isz.summ = isz %>%
     group_by(sample, Sample_Plate) %>%
-    summarise(isz.mean = sum(size * total)/sum(total),
+    summarise(isz.mean = sum(as.numeric(size) * total)/sum(as.numeric(total)),
               yield.mb=sum(true.yield)/1e6)
 head(isz.summ)
 
@@ -46,9 +46,9 @@ hist(isz.summ$isz.mean, breaks=30, col='red')
 
 hist(isz.summ$yield.mb)
 
-ggplot(isz.summ, aes(isz.mean, yield.mb, colour=Sample_Plate, shape=Sample_Plate)) +
-    geom_point(alpha=0.7)
-    labs(x="Insert Size (bp)", y="Yield (mbp covered)") +
+ggplot(isz.summ, aes(isz.mean, yield.mb, colour=Sample_Plate)) +
+    geom_point(alpha=0.7, size=2) +
+    labs(x="Mean Insert Size (bp)", y="Yield (mbp covered)") +
     theme_bw()
 
 ```
