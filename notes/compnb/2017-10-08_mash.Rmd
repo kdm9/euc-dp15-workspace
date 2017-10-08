@@ -1,0 +1,43 @@
+# Mash analysis of FC1
+
+These are the results of a quick mash run over the first flowcell from the NovaSeq.
+
+```{r setup, warning=F}
+library(tidyverse)
+```
+
+
+```{r load-mash}
+mash = as.matrix(read.delim("data/2017-10-08_mash/mash.dist", row.names = 1))
+sampnames = sub(".fastq.gz", "", basename(rownames(mash)))
+rownames(mash) = colnames(mash) = sampnames
+```
+
+
+```{r image-hclust,fig.width=12,fig.height=8,fig.ext='svg'}
+image(mash)
+plot(hclust(as.dist(mash)), cex=0.3)
+```
+
+That's promising, as there are two major groups. The outliers are largely failed samples and blanks. Let's bring in the metadata and remove low-covered samples.
+
+```{r metadata}
+
+hist(md$coverage)
+
+goodcov = md %>%
+    filter(coverage >= 1)
+
+m = match(as.character(goodcov$sample), sampnames)
+mash.gc = mash[m, m]
+```
+
+```{r plot-goodcov,fig.width=12,fig.height=8,fig.ext='svg'}
+image(mash.gc)
+plot(hclust(as.dist(mash.gc)), cex=0.3)
+```
+```{r saveplot,include=F}
+pdf("data/common/nova-fc1-mashtree.pdf", width=12, height=8)
+plot(hclust(as.dist(mash.gc)), cex=0.3)
+dev.off()
+```

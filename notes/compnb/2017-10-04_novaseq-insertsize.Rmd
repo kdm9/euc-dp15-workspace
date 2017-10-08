@@ -1,0 +1,54 @@
+# 2017-09-13 -- Ramacotti test run insert sizes
+
+This has been made using NGM alignment to the grandis reference, then `samtools stats` to generate the insert size distribution. This is of course only across the fragments where both pairs could be mapped as a valid, inward-facing pair, but this shouldn't affect the result.
+
+```{r}
+library(tidyverse)
+library(ggjoy)
+
+metadata = read.csv("data/2017-10-04_novaseq-insertsize/sampsheet.csv") %>%
+    mutate(Sample_Plate=as.factor(Sample_Plate))
+str(metadata)
+
+isz = read.delim("data/2017-10-04_novaseq-insertsize/insertsize.tsv",
+                 header=F, col.names=c("sample", "size", "total", "inward", "outward", "other")) %>%
+    select(sample, size, total, inward) %>%
+    filter(size <= 1500) %>%
+    group_by(sample, size) %>%
+    summarise(total=sum(total), inward=sum(inward)) %>%
+    ungroup() %>%
+    mutate(covered.bp = ifelse(size == 0, 300, ifelse(size>300, 300, size)),
+           true.yield = covered.bp * total)
+str(isz)
+
+isz = left_join(isz, metadata, by=c("sample" = "Sample_Name"))
+str(isz)
+
+isz.plate = isz %>%
+    group_by(Sample_Plate, size)  %>%
+    summarise(total=sum(total), inward=sum(inward))
+str(isz.plate)
+
+ggplot(isz.plate, aes(size, Sample_Plate, height=inward)) +
+    geom_joy(aes(colour=Sample_Plate, fill=Sample_Plate), stat="identity", alpha=0.7) +
+    scale_fill_cyclical(values = c("blue", "green")) +
+    scale_colour_cyclical(values = c("blue", "green")) +
+    labs(x="Insert Size (bp)", y="Plate") +
+    theme_bw()
+
+isz.summ = isz %>%
+    group_by(sample, Sample_Plate) %>%
+    summarise(isz.mean = sum(as.numeric(size) * total)/sum(as.numeric(total)),
+              yield.mb=sum(true.yield)/1e6)
+head(isz.summ)
+
+hist(isz.summ$isz.mean, breaks=30, col='red')
+
+hist(isz.summ$yield.mb)
+
+ggplot(isz.summ, aes(isz.mean, yield.mb, colour=Sample_Plate)) +
+    geom_point(alpha=0.7, size=2) +
+    labs(x="Mean Insert Size (bp)", y="Yield (mbp covered)") +
+    theme_bw()
+
+```
