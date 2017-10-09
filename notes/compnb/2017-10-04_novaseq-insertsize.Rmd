@@ -2,20 +2,22 @@
 title: "First flowcell insert sizes"
 output:
   html_document:
-    dev: svg
+    dev: CairoSVG
     fig.width: 7
     fig.height: 5
 ---
 
 This has been made using NGM alignment to the grandis reference, then `samtools stats` to generate the insert size distribution. This is of course only across the fragments where both pairs could be mapped as a valid, inward-facing pair, but this shouldn't affect the result dramatically.
 
-```{r}
+```{r setup,include=F}
 library(tidyverse)
-library(ggjoy)
+library(ggridges)
+```
 
+```{r}
 metadata = read.csv("data/2017-10-04_novaseq-insertsize/sampsheet.csv") %>%
     mutate(Sample_Plate=as.factor(Sample_Plate))
-str(metadata)
+#str(metadata)
 
 isz = read.delim("data/2017-10-04_novaseq-insertsize/insertsize.tsv",
                  header=F, col.names=c("sample", "size", "total", "inward", "outward", "other")) %>%
@@ -26,18 +28,18 @@ isz = read.delim("data/2017-10-04_novaseq-insertsize/insertsize.tsv",
     ungroup() %>%
     mutate(covered.bp = ifelse(size == 0, 300, ifelse(size>300, 300, size)),
            true.yield = covered.bp * total)
-str(isz)
+#str(isz)
 
 isz = left_join(isz, metadata, by=c("sample" = "Sample_Name"))
-str(isz)
+#str(isz)
 
 isz.plate = isz %>%
     group_by(Sample_Plate, size)  %>%
     summarise(total=sum(total), inward=sum(inward))
-str(isz.plate)
+#str(isz.plate)
 
 ggplot(isz.plate, aes(size, Sample_Plate, height=inward)) +
-    geom_joy(aes(colour=Sample_Plate, fill=Sample_Plate), stat="identity", alpha=0.7) +
+    geom_density_ridges(aes(colour=Sample_Plate, fill=Sample_Plate), stat="identity", alpha=0.7) +
     scale_fill_cyclical(values = c("blue", "green")) +
     scale_colour_cyclical(values = c("blue", "green")) +
     labs(x="Insert Size (bp)", y="Plate") +
@@ -47,15 +49,15 @@ isz.summ = isz %>%
     group_by(sample, Sample_Plate) %>%
     summarise(isz.mean = sum(as.numeric(size) * total)/sum(as.numeric(total)),
               yield.mb=sum(true.yield)/1e6)
-head(isz.summ)
+# str(isz.summ)
 
 hist(isz.summ$isz.mean, breaks=30, col='red')
 
 hist(isz.summ$yield.mb)
 
 ggplot(isz.summ, aes(isz.mean, yield.mb, colour=Sample_Plate)) +
-    geom_point(alpha=0.7, size=2) +
+    geom_point(alpha=0.5, size=2) +
     labs(x="Mean Insert Size (bp)", y="Yield (mbp covered)") +
+    scale_color_brewer(palette = "Paired") +
     theme_bw()
-
 ```
