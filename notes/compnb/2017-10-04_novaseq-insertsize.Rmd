@@ -1,6 +1,13 @@
-# 2017-09-13 -- Ramacotti test run insert sizes
+---
+title: "First flowcell insert sizes"
+output:
+  html_document:
+    dev: svg
+    fig.width: 7
+    fig.height: 5
+---
 
-This has been made using NGM alignment to the grandis reference, then `samtools stats` to generate the insert size distribution. This is of course only across the fragments where both pairs could be mapped as a valid, inward-facing pair, but this shouldn't affect the result.
+This has been made using NGM alignment to the grandis reference, then `samtools stats` to generate the insert size distribution. This is of course only across the fragments where both pairs could be mapped as a valid, inward-facing pair, but this shouldn't affect the result dramatically.
 
 ```{r}
 library(tidyverse)

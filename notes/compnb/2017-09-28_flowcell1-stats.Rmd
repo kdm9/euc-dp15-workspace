@@ -1,4 +1,11 @@
-# Flow cell stats
+---
+title: "First flow cell stats"
+output:
+  html_document:
+    dev: svg
+    fig.width: 7
+    fig.height: 5
+---
 
 ```{r setup,warning=F}
 library(tidyverse)
@@ -55,7 +62,6 @@ d.merge = d %>%
     mutate(coverage = yield.mb / 640,
            sample=trimws(sample)) %>%
     filter(sample != "Undetermined")
-write.csv(d.merge, "data/common/nova-fc1-stats.csv", row.names = F)
 
 head(d.merge)
 hist(d.merge$yield.mb)
