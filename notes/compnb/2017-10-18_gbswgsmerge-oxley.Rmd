@@ -1,0 +1,253 @@
+---
+output:
+  html_document:
+      dev: png
+---
+
+# Oxley, melliodora and WGS merged dataset analysis
+
+This joins Tim's Oxley GBS, Megan/Linda's melliodora GBS and the project 1 WGS data, to see if we can detect possible non-conica/magnificata parentage of E. sp. oxley.
+
+
+##  Setup
+
+Parameters are set here. `maxMissing` is for snps, i.e. snps must have data in x samples, and `maxSampleMissing` is the transpose of this. `missingZscoreThreshold` converts missing rates to z scores, and uses `abs(zscore) <= missingZscoreThreshold` as the filter (`NA` disables this).
+
+```{r}
+library(SNPRelate)
+library(tidyverse)
+
+minMAF = 0.02
+maxMissing = 0.8
+maxSampleMissing = 0.99
+```
+
+
+## Convert vcf to GDS and load data
+
+```{r}
+#snpgdsVCF2GDS("data/common-variants-all-data.vcf.gz", "data/merged-snps.gds")
+geno = snpgdsOpen("data/merged-snps.gds", allow.duplicate = T)
+```
+
+
+## Metadata
+
+```{r}
+gs = snpgdsSummary(geno)
+samp = gs$sample.id
+samp.miss = snpgdsSampMissRate(geno)
+samp.pass = samp[samp.miss <= maxSampleMissing]
+hist(samp.miss, breaks=100)
+abline(v=maxSampleMissing, col="red")
+```
+
+It appears that there is quite a large issue with missing data in this dataset. Approx 70 samples have no genotype at >99% of SNPs. It is quite likely that these datasets are not able to be combined in a reasonable fashion, especially the two GBS datasets.
+
+```{r}
+metadata = read.csv("./merged-euc-metadata.csv")
+metadata = metadata %>%
+    mutate(species.noX = factor(sub("([^X]+)X[^X]+", "\\1", species)))
+metadata = metadata[match(samp.pass, metadata$vcfid),]
+
+metadata$missing = snpgdsSampMissRate(geno, sample.id=metadata$vcfid)
+metadata$pass.missrate = metadata$missing <= maxSampleMissing
+#str(metadata)
+```
+
+```{r}
+ggplot(metadata, aes(source, missing)) +
+    geom_boxplot() +
+    theme_bw()
+```
+
+It looks like Tim's dataset has a severe problem with missing data. Unsurprisingly, the WGS dataset has the least missing data. Loci only present at any reasonable level in the WGS dataset will need to be filtered out.
+
+```{r}
+ggplot(metadata, aes(species.noX, missing)) +
+    geom_boxplot() +
+    theme_bw() +
+    theme(axis.text.x=element_text(angle=30, vjust=1, hjust=1))
+```
+
+And missing rate is of course confounded by species.
+
+## GBS snp selection
+
+This select the SNPs based on evaluating the above criteria (missing rate `<=` `r maxMissing`, maf `>=` `r minMAF`).
+
+```{r}
+samp.gbs = filter(metadata, source %in% c("msupple", "emag"), pass.missrate)$vcfid
+snps.gbs = snpgdsSelectSNP(geno, sample.id=samp.gbs, missing.rate=maxMissing, maf=minMAF)
+gn.gbs = snpgdsGetGeno(geno, snp.id=snps.gbs)
+image(gn.gbs)
+
+metadata$missing.gbs = snpgdsSampMissRate(geno, sample.id=metadata$vcfid, snp.id=snps.gbs)
+```
+
+```{r}
+ggplot(metadata, aes(source, missing.gbs)) +
+    geom_boxplot() +
+    theme_bw()
+```
+Even among SNPs present at some reasonable level across GBS samples, there's still a huge missing data problem. It isn't just driven by the difference between the fraction of the genome GBS and WGS assay.
+
+## PCA
+
+This function does PCA on a set of samples, and returns both the dataframe and a plot.
+
+```{r}
+plotPCA = function(g, samples=samp.pass, snps=NULL, eigen.cnt=9) {
+    # PCA
+    pca <- snpgdsPCA(g, maf=minMAF, missing.rate=maxMissing, sample.id=samples,
+                     eigen.cnt=eigen.cnt, snp.id=snps)
+    # Create PCA plot data frame
+    pltdat <- as.data.frame(pca$eigenvect)
+    colnames(pltdat) <- paste0("PC", 1:ncol(pltdat))
+    pltdat <- pltdat %>%
+            bind_cols(metadata[match(pca$sample.id, metadata$vcfid),]) %>%
+            mutate(label = substr(species, 1, 6))
+    pltdat$missing <- snpgdsSampMissRate(g, sample.id=samples, snp.id=NULL)
+    str(pltdat)
+    # make plot
+    p <- ggplot(pltdat, aes(PC1, PC2, colour=species.noX, shape=source)) +
+        geom_text(aes(label=label), alpha=0.4) +
+        theme_bw()
+    return(list(data=pltdat, plot=p))
+}
+```
+
+This function plots the first `N` PCs against missing rate, to check that we're not just recovering data quality as a PC.
+
+```{r}
+plotPCvMissing = function(data, N=9) {
+    for (i in 1:5) {
+        plot(data$missing, data[,i], main=paste("PC", i, "vs missingness"))
+        # This is useful for interactive use
+        #invisible(readline(prompt="Press [enter] to continue"))
+    }
+}
+```
+
+
+### All samples
+
+This plot contains all samples that pass filters, across all SNPs which meet criteria (across all samples)
+
+```{r pca-all}
+pc.all = plotPCA(geno)
+print(pc.all$plot)
+print(nrow(pc.all$data))
+```
+
+This one is all samples, but with GBS snps.
+```{r pca-all-gbs}
+pc.all = plotPCA(geno, snps=snps.gbs)
+print(pc.all$plot)
+print(nrow(pc.all$data))
+```
+
+Coloured by lane, note the various melliodora samples aren't exactly clustering.
+
+```{r}
+p <- ggplot(pc.all$data, aes(PC1, PC2, colour=source, shape=source)) +
+    geom_text(aes(label=label), alpha=0.4) +
+    theme_bw()
+print(p)
+```
+
+
+### Just Tim's data
+
+Subsample SNPs & samples down to just Tim's data
+
+```{r}
+samp.oxley = filter(metadata, source=="emag")$vcfid
+# Missingness of oxley samples within GBS snps
+miss.oxley = snpgdsSampMissRate(geno, sample.id=samp.oxley, snp.id=snps.gbs)
+samp.oxley <- samp.oxley[miss.oxley <= maxSampleMissing]
+hist(miss.oxley, breaks=20)
+snps.oxley = snpgdsSelectSNP(geno, sample.id=samp.oxley, missing.rate=maxMissing, maf=minMAF)
+```
+
+```{r dev="png"}
+image(snpgdsGetGeno(geno, snp.id=snps.oxley, sample.id=samp.oxley))
+pc.oxley = plotPCA(geno, samples=samp.oxley, snps=snps.oxley)
+print(pc.oxley$plot)
+```
+
+### All data with oxley SNPs
+
+The above few plots use all SNPs. This subsets the dataset to SNPS of reasonable quality in Tim's dataset, and includes all samples. These thresholds are even stricter than the above.
+
+```{r dev="png"}
+snps.oxley = snpgdsSelectSNP(geno, sample.id=samp.oxley, missing.rate=0.7, maf=0.03)
+image(snpgdsGetGeno(geno, snp.id=snps.oxley))
+```
+
+This data is very sparse. The above thresholds are well optimised to separate the oxley sample set. We're unable to get a pairwise distance matrix due to sparsity.
+
+```{r fig.width=12,fig.height=12}
+samps.oxley <- samp[snpgdsSampMissRate(geno, snp.id=snps.oxley) <= maxSampleMissing]
+pc.oxley = plotPCA(geno, samples=samps.oxley, snps=snps.oxley)
+print(pc.oxley$plot)
+```
+
+# Scrap-heap
+
+Below here is either a work in progress or stuff I've tried and failed, but kept in for historical/illustrative purposes.
+
+## Fst
+
+```{r dev="png"}
+md.goodspp = metadata %>%
+    group_by(species.noX) %>%
+    mutate(spp.n = n()) %>%
+    ungroup() %>%
+    filter(spp.n > 1) %>%
+    mutate(species.noX = as.factor(as.character(species.noX))) %>%
+    select(-spp.n)
+
+fst = snpgdsFst(geno, md.goodspp$species.noX, snp.id=snps.oxley, sample.id = md.goodspp$vcfid)
+
+hist(fst$Beta)
+image(fst$Beta)
+hc = hclust(as.dist(fst$Beta + 1))
+image(fst$Beta[hc$order, hc$order])
+plot(hc)
+```
+
+
+## Identity-by-state analysis
+
+
+The data is too sparse for these to work, as there are pairs of samples for which there are no SNPs with data in both samples, leading to NA/NaN in IBS matrix.
+
+```{r dev="png"}
+ibs = snpgdsIBS(geno, maf=minMAF, missing.rate=maxMissing, snp.id=snps.oxley)
+image(ibs$ibs)
+# doesn't work, NAs in dist matrix
+# hc = snpgdsHCluster(ibs)
+# snpgdsCutTree(hc) %>%
+#     snpgdsDrawTree(type="dendrogram")
+```
+
+### Diss
+
+This uses Diss, which is based on $F_{ST}$. Same problem exists though, the data is incomparible due to sparsity
+
+```{r dev="png"}
+diss = snpgdsDiss(geno, snp.id=snps.oxley, sample.id = md.goodspp$vcfid)
+image(diss$diss)
+table(is.na(diss$diss))
+#snpgdsHCluster(diss) %>%
+#    snpgdsCutTree() %>%
+#    snpgdsDrawTree()
+```
+
+
+## Clean up
+
+```{r}
+snpgdsClose(geno)
+```
