@@ -9,7 +9,7 @@ UPLOAD_TO = edmund.anu.edu.au:~/public_html/euc-nb/compnb
 all: $(TARGETS)
 
 clean:
-	rm -f $(TARGETS)
+	rm -f $(TARGETS) *.nb.html
 
 upload: $(TARGETS)
 	scp $(TARGETS) $(UPLOAD_TO)

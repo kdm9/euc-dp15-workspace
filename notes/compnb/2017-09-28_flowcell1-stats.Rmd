@@ -2,7 +2,7 @@
 title: "First flow cell stats"
 output:
   html_document:
-    dev: svg
+    dev: png
     fig.width: 7
     fig.height: 5
 ---

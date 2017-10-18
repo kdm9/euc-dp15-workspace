@@ -2,7 +2,7 @@
 title: "First flowcell insert sizes"
 output:
   html_document:
-    dev: CairoSVG
+    dev: png
     fig.width: 7
     fig.height: 5
 ---
