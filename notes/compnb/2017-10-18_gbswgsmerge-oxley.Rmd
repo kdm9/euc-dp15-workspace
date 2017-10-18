@@ -26,8 +26,8 @@ maxSampleMissing = 0.99
 ## Convert vcf to GDS and load data
 
 ```{r}
-#snpgdsVCF2GDS("data/common-variants-all-data.vcf.gz", "data/merged-snps.gds")
-geno = snpgdsOpen("data/merged-snps.gds", allow.duplicate = T)
+#snpgdsVCF2GDS("data/2017-10-18_gbswgsmerge-oxley/common-variants-all-data.vcf.gz", "data/2017-10-18_gbswgsmerge-oxley/merged-snps.gds")
+geno = snpgdsOpen("data/2017-10-18_gbswgsmerge-oxley/merged-snps.gds", allow.duplicate = T)
 ```
 
 
@@ -45,7 +45,7 @@ abline(v=maxSampleMissing, col="red")
 It appears that there is quite a large issue with missing data in this dataset. Approx 70 samples have no genotype at >99% of SNPs. It is quite likely that these datasets are not able to be combined in a reasonable fashion, especially the two GBS datasets.
 
 ```{r}
-metadata = read.csv("./merged-euc-metadata.csv")
+metadata = read.csv("data/2017-10-18_gbswgsmerge-oxley/merged-euc-metadata.csv")
 metadata = metadata %>%
     mutate(species.noX = factor(sub("([^X]+)X[^X]+", "\\1", species)))
 metadata = metadata[match(samp.pass, metadata$vcfid),]
