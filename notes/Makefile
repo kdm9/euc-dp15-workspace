@@ -19,5 +19,5 @@ upload: $(TARGETS)
 	@echo "   PANDOC\t$<"
 
 %.html: %.Rmd
-	@Rscript -e 'rmarkdown::render("$<", output_file="$(@F)", output_format="html_document")'
+	@Rscript -e 'rmarkdown::render("$<", output_file="$(@F)", output_format="html_document")' >/dev/null
 	@echo "   KNIT\t$<"
