@@ -55,16 +55,26 @@ rule all:
         rules.denovodist.input,
 
 
+localrules: poolruns
+rule poolruns:
+    input:
+        reads=lambda wc: expand("data/reads/runs/{run}.fastq.gz", run=SAMPLE2RUN[wc.sample]),
+    output:
+        reads="data/reads/samples/{sample}.fastq.gz",
+    threads: 4
+    shell:
+        "zcat {input} | pigz -p {threads} -7 >{output}"
+
 localrules: qcreads
 rule qcreads:
     input:
         r1="rawdata/libraries/{lib}_R1.fastq.gz"
         r2="rawdata/libraries/{lib}_R2.fastq.gz"
     output:
-        reads="data/reads/runs/{run}.fastq.gz",
+        reads="data/reads/libraries/{lib}.fastq.gz",
     log:
-        log="data/log/adapterremoval/{run}.log",
-        settings="data/stats/adapterremoval/{run}.txt",
+        log="data/log/adapterremoval/{lib}.log",
+        settings="data/stats/adapterremoval/{lib}.txt",
     threads:
         4
     params:
