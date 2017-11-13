@@ -1,9 +1,9 @@
 #!/bin/bash
-#PBS -q express
-#PBS -l ncpus=16
-#PBS -l walltime=24:00:00
-#PBS -l mem=63G
-#PBS -l jobfs=300G
+#PBS -q normalbw
+#PBS -l ncpus=28
+#PBS -l walltime=12:00:00
+#PBS -l mem=5G
+#PBS -l jobfs=400G
 #PBS -l other=gdata1
 #PBS -l wd
 #PBS -M kevin@kdmurray.id.au
@@ -29,15 +29,14 @@ source raijin/modules.sh
 QSUB="qsub -q {cluster.queue} -l ncpus={threads} -l jobfs={cluster.jobfs}"
 QSUB="$QSUB -l walltime={cluster.time} -l mem={cluster.mem} -N {cluster.name}"
 QSUB="$QSUB -l wd -o $logdir -e $logdir -P xe2"
-torun="${2:-all}"
 
 snakemake --unlock
 
 snakemake                                \
     -j 500                               \
     --cluster-config raijin/cluster.yaml \
-    --local-cores 16                     \
+    --local-cores ${PBS_NCPUS}           \
     --js raijin/jobscript.sh             \
     --rerun-incomplete                   \
     --keep-going                         \
-    --cluster "$QSUB" $torun
+    --cluster "$QSUB" "${target:-all}"

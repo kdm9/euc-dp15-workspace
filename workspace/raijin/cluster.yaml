@@ -5,30 +5,42 @@ __default__:
   jobfs: 100G
   name: "{rule}_{wildcards}"
 
-poolreads:
-  time: '0:10:00'
+# poolreads: #local rule
+#   time: '1:00:00'
 
-qcreads:
-  time: '3:00:00'
+# qcreads: #local rule
+#   time: '0:30:00'
+
+read_count:
+  time: "6:00:00"
+
+unique_kmers:
+  time: "18:00:00"
 
 ngmap:
-  time: '18:00:00'
+  time: '12:00:00'
 
 bwamem:
   time: '8:00:00'
 
 mergebam:
-  time: '8:00:00'
-
-freebayes:
-  time: '36:00:00'
-
-mpileup:
-  time: '3:00:00'
+  time: '24:00:00'
 
 bcfmerge:
-  time: '16:00:00'
+  time: '72:00:00'
 
 angsd_step1_split:
   time: '8:00:00'
   mem: 3800M # 4GB minus a bit so 8*3.8 < 31
+
+countsketch:
+  time: "4:00:00"
+
+kwip:
+  time: '168:00:00'
+
+mashsketch:
+  time: '12:00:00'
+
+mash:
+  time: '2:00:00'

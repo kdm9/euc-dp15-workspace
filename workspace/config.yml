@@ -5,12 +5,12 @@ qc:
 
 mapping:
   aligners:
-    - ngm
+    #- ngm
     - bwa
   ref: grandis
 
 refs:
-  grandis: rawdata/refs/grandis/Egrandis_v2.fasta
+  grandis: /g/data1/xe2/references/eucalyptus/grandis/Egrandis_v2.fasta
 
 
 denovodist:
@@ -19,12 +19,13 @@ denovodist:
   ksize: 21
 
 varcall:
+  theta_prior: 0.02
   chunksize: 1000000
   aligners:
-    - ngm
-    # - bwa
+    # - ngm
+    - bwa
   callers:
-    # - freebayes
+    - freebayes
     - mpileup
   genomes:
     - grandis

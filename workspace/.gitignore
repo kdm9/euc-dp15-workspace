@@ -1,5 +1,4 @@
 .snakemake/
-data/
-aspera/
-sandbox/
+data
+sandbox
 rawdata
