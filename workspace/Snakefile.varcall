@@ -1,0 +1,109 @@
+import snkmk
+configfile: "config.yml"
+VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
+CHROMOSOMES = snkmk.make_chroms(config["refs"])
+LIB2SAMP, SAMP2LIB = snkmk.make_lib2sample2lib()
+SAMPLESETS = {"all_samples": list(SAMP2LIB.keys())}
+
+rule all:
+    input:
+        expand("data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf",
+               caller=config["varcall"]["callers"],
+               aligner=config["varcall"]["aligners"],
+               ref=config["varcall"]["genomes"],
+               sampleset="all_samples"),
+
+
+
+rule freebayes:
+    input:
+        bams=lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam", aligner=wc.aligner,
+                               ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
+        bamlist="data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        bcf=temp("data/variants/freebayes/{aligner}/{ref}/{sampleset}/split/{region}.bcf"),
+        idx=temp("data/variants/freebayes/{aligner}/{ref}/{sampleset}/split/{region}.bcf.csi"),
+    log:
+        "data/log/freebayes/{aligner}/{ref}/{sampleset}/{region}.log"
+    threads: 1
+    params:
+        region=lambda wc: "' --region '".join(VARCALL_REGIONS[wc.ref][wc.region]),
+        theta=config["varcall"].get("theta_prior", 0.01),
+    shell:
+        "( freebayes"
+        "   --theta {params.theta}"
+        "   --use-reference-allele"
+        "   --min-mapping-quality 10"
+        "   --min-base-quality 10"
+        "   --min-alternate-fraction 0.1"
+        "   --min-alternate-count 1"
+        "   --min-alternate-total 4"
+        "   --use-mapping-quality"
+        "   --genotype-qualities"
+        "   --region '{params.region}'"
+        "   --fasta-reference {input.ref}"
+        "   --bam-list {input.bamlist}"
+        " | bcftools view"
+        "   -O b"
+        "   -o {output.bcf}"
+        " && bcftools index -f {output.bcf}"
+        " ) >{log} 2>&1"
+
+rule mpileup:
+    input:
+        bams=lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam", aligner=wc.aligner,
+                               ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
+        bamlist="data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        bcf=temp("data/variants/mpileup/{aligner}/{ref}/{sampleset}/split/{region}.bcf"),
+        idx=temp("data/variants/mpileup/{aligner}/{ref}/{sampleset}/split/{region}.bcf.csi"),
+    log:
+        "data/log/mpileup/{aligner}/{ref}/{sampleset}/{region}.log"
+    threads: 1
+    params:
+        region=lambda wc: "' --region '".join(VARCALL_REGIONS[wc.ref][wc.region]),
+        targets=lambda wc: "' --targets '".join(VARCALL_REGIONS[wc.ref][wc.region]), # for bcftools
+        theta=config["varcall"].get("theta_prior", 0.01),
+    shell:
+        "( samtools mpileup"
+        "   --output-tags DP,AD,ADF,ADR,SP,INFO/AD,INFO/ADF,INFO/ADR" #output everything
+        "   --region '{params.region}'"
+        "   --fasta-ref {input.ref}"
+        "   --bam-list {input.bamlist}"
+        "   --redo-BAQ"
+        "   --BCF --uncompressed"
+        " | bcftools call"
+        "   --targets '{params.targets}'" # might not be needed
+        "   --multiallelic-caller"
+        "   --prior {params.theta}"
+        "   -O b"
+        "   -o {output.bcf}"
+        " && bcftools index -f {output.bcf}"
+        " ) >{log} 2>&1"
+
+rule bcfmerge:
+    input:
+        bcf=lambda wc: expand("data/variants/{caller}/{aligner}/{ref}/{sampleset}/split/{region}.bcf",
+                              caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset,
+                              region=sorted(VARCALL_REGIONS[wc.ref])),
+        idx=lambda wc: expand("data/variants/{caller}/{aligner}/{ref}/{sampleset}/split/{region}.bcf.csi",
+                              caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset,
+                              region=sorted(VARCALL_REGIONS[wc.ref])),
+    output:
+        bcf="data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf",
+        idx="data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
+    log:
+        "data/log/mergebcf/{caller}/{aligner}/{ref}/{sampleset}.log"
+    threads: 2
+    shell:
+        "( bcftools concat"
+        "   --allow-overlaps"
+        "   --remove-duplicates"
+        "   --threads {threads}"
+        "   -O b"
+        "   -o {output.bcf}"
+        "   {input.bcf}"
+        " && bcftools index -f {output.bcf}"
+        " ) >{log} 2>&1"

@@ -44,3 +44,9 @@ mashsketch:
 
 mash:
   time: '2:00:00'
+
+mpileup:
+  time: '1:30:00'
+
+freebayes:
+  time: '4:00:00'

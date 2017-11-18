@@ -1,3 +1,5 @@
+import snkmk
+configfile: "config.yml"
 rule angsd:
     input:
         step1=expand("data/angsd/step1/{aligner}/{ref}/{set}/split/{region}.snpStat.gz",

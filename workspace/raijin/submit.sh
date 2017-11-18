@@ -1,7 +1,7 @@
 #!/bin/bash
-#PBS -q normalbw
-#PBS -l ncpus=28
-#PBS -l walltime=12:00:00
+#PBS -q normal
+#PBS -l ncpus=1
+#PBS -l walltime=24:00:00
 #PBS -l mem=5G
 #PBS -l jobfs=400G
 #PBS -l other=gdata1
@@ -39,4 +39,5 @@ snakemake                                \
     --js raijin/jobscript.sh             \
     --rerun-incomplete                   \
     --keep-going                         \
-    --cluster "$QSUB" "${target:-all}"
+    --cluster "$QSUB" "${target:-all}" 	 \
+    >data/log/snakemake.log 2>&1

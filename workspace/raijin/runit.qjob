@@ -8,7 +8,7 @@
 #PBS -l wd
 #PBS -M kevin@kdmurray.id.au
 #PBS -m abe
-#PBS -P xe2
+#PBS -P gh6
 
 source /g/data1/xe2/.profile
 
@@ -22,8 +22,8 @@ mkdir -p data/log
 
 snakemake                                                         \
     --snakefile ${SNAKEFILE:-Snakefile}                           \
-    -j ${PBS_NCPUS:-16}                                           \
+    -j ${PBS_NCPUS}                                               \
     --rerun-incomplete                                            \
-    all                                                           \
-    >>data/log/`date +%Y-%m-%d`_${PBS_JOBNAME}-snakemake.log 2>&1 \
+    ${target:-all}                                                \
+    >>data/log/`date +%Y-%m-%d`_${PBS_JOBID}_snakemake.log 2>&1   \
 

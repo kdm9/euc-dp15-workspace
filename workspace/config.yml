@@ -5,7 +5,7 @@ qc:
 
 mapping:
   aligners:
-    #- ngm
+    - ngm
     - bwa
   ref: grandis
 
@@ -25,7 +25,7 @@ varcall:
     # - ngm
     - bwa
   callers:
-    - freebayes
+    #- freebayes
     - mpileup
   genomes:
     - grandis
