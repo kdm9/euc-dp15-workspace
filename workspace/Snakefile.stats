@@ -1,34 +1,6 @@
 import snkmk
 configfile: "config.yml"
 
-LIB2SAMP, SAMP2LIB = snkmk.make_lib2sample2lib()
+LIB2RUN = snkmk.make_lib2run()
 
 
-rule all:
-    input:
-        expand("data/stats/insertsize/{aligner}/{ref}_insertionsize.tsv",
-               aligner=config["chloro"]["aligners"],
-               ref=config["chloro"]["genomes"]),
-
-rule merge:
-    input:
-        lambda wc: expand("data/stats/insertsize/{aligner}/{ref}/{sample}_insertionsize.tsv",
-                          aligner=wc.aligner, ref=wc.ref, sample=SAMP2LIB),
-    output:
-        "data/stats/insertsize/{aligner}/{ref}_insertionsize.tsv"
-    shell:
-        "cat {input} > {output}"
-
-
-rule stats:
-    input:
-        bam="data/alignments/{aligner}/{ref}/{sample}.bam"
-    output:
-        "data/stats/insertsize/{aligner}/{ref}/{sample}.tsv"
-    log:
-        "data/log/bamstats/{aligner}/{ref}/{sample}.log"
-    shell:
-        "(samtools stats {input}"
-        " | grep '^IS' | sed -e 's/^IS/{wildcards.sample}/"
-        " > {output}')"
-        ">{log} 2>&1"

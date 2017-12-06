@@ -7,7 +7,8 @@ LIB2SAMP, SAMP2LIB = snkmk.make_lib2sample2lib()
 LIB2RUN = snkmk.make_lib2run()
 SAMPLESETS = {"all_samples": list(SAMP2LIB.keys())}
 
-localrules: qc, map, varcall, denovodist, all
+
+localrules: qc, map,  all
 
 wildcard_constraints:
     run="[^/]+",
@@ -26,15 +27,27 @@ rule qc:
 rule map:
     input:
         expand("data/alignments/{aligner}/{ref}/{sample}.bam",
-               ref=config["mapping"]["ref"],
+               ref=config["mapping"]["refs"],
                aligner=config["mapping"]["aligners"],
-               sample=SAMP2LIB)
+               sample=SAMP2LIB),
+        expand("data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
+               ref=config["mapping"]["refs"],
+               aligner=config["mapping"]["aligners"],
+               sampleset=SAMPLESETS),
+
+rule bamstats:
+    input:
+        expand("data/stats/insertsize/{aligner}~{ref}_insertionsize.tsv",
+               aligner=config["mapping"]["aligners"],
+               ref=config["mapping"]["refs"]),
+
 
 
 rule all:
     input:
         rules.qc.input,
         rules.map.input,
+	rules.bamstats.input,
 
 
 #localrules: qcreads
@@ -83,7 +96,7 @@ rule read_count:
     output:
         "data/readstats/readnum.tsv",
     threads:
-        16
+        28
     log:
         "data/log/readstats/seqhax-stats.log",
     shell:
@@ -95,10 +108,8 @@ rule read_count:
 
 rule ngmap:
     input:
-        reads=["data/reads/runs/{run}/{lib}.fastq.gz".format(run=r, lib=l)
-		for l, runs in LIB2RUN.items()
-		for r in runs],
-        ref=lambda wc: config['refs'][wc.ref]
+        reads="data/reads/runs/{run}/{lib}.fastq.gz",
+        ref=lambda wc: config['refs'][wc.ref],
     output:
         bam="data/alignments/ngm/{ref}/byrun/{run}/{lib}.bam",
         bai="data/alignments/ngm/{ref}/byrun/{run}/{lib}.bam.bai",
@@ -106,18 +117,20 @@ rule ngmap:
         "data/log/ngm/{ref}/{run}/{lib}.log"
     threads:
         4
+    params:
+        sample=lambda wc: LIB2SAMP[wc.lib],
     shell:
         "( ngm"
-        "   -q <(zcat {input.reads})"
+        "   -q {input.reads}"
         "   --paired --broken-pairs"
         "   -r {input.ref}"
         "   -t {threads}"
         "   --rg-id {wildcards.run}_{wildcards.lib}"
-        "   --rg-sm {wildcards.sample}"
-        "   --very-sensitive"
+        "   --rg-sm {params.sample}"
+        "   --sensitive"
         " | samtools view -Suh -"
         " | samtools sort"
-        "   -T ${{TMPDIR:-/tmp}}/{wildcards.run}_{wildcards.lib}"
+        "   -T ${{TMPDIR:-/tmp}}/ngm_{wildcards.run}_{wildcards.lib}"
         "   -@ {threads}"
         "   -m 1G"
         "   -o {output.bam}"
@@ -127,10 +140,8 @@ rule ngmap:
 
 rule bwamem:
     input:
-        reads=["data/reads/runs/{run}/{lib}.fastq.gz".format(run=r, lib=l)
-		for l, runs in LIB2RUN.items()
-		for r in runs],
-        ref=lambda wc: config['refs'][wc.ref]
+        reads="data/reads/runs/{run}/{lib}.fastq.gz",
+        ref=lambda wc: config['refs'][wc.ref],
     output:
         bam="data/alignments/bwa/{ref}/byrun/{run}/{lib}.bam",
         bai="data/alignments/bwa/{ref}/byrun/{run}/{lib}.bam.bai",
@@ -138,16 +149,18 @@ rule bwamem:
         "data/log/bwa/{ref}/{run}/{lib}.log"
     threads:
         4
+    params:
+        sample=lambda wc: LIB2SAMP.get(wc.lib, wc.lib),
     shell:
         "( bwa mem"
         "   -p" # paired input
         "   -t {threads}"
-        "   -R '@RG\\tID:{wildcards.run}_{wildcards.lib}\\tSM:{wildcards.sample}'"
+        "   -R '@RG\\tID:{wildcards.run}_{wildcards.lib}\\tSM:{params.sample}'"
         "   {input.ref}"
-        "   <(zcat {input.reads})"
+        "   {input.reads}"
         " | samtools view -Suh -"
         " | samtools sort"
-        "   -T ${{TMPDIR:-/tmp}}/{wildcards.sample}"
+        "   -T ${{TMPDIR:-/tmp}}/bwa_{wildcards.run}_{wildcards.lib}"
         "   -@ {threads}"
         "   -m 1G"
         "   -o {output.bam}"
@@ -178,7 +191,7 @@ rule mergebam_samp:
 localrules: bamlist
 rule bamlist:
     input:
-        lambda wc: expand("data/alignments/{aligner}/{sample}.bam",
+        lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam",
                           aligner=wc.aligner, ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
 
     output:
@@ -187,3 +200,30 @@ rule bamlist:
         with open(output[0], "w") as fh:
             for s in input:
                 print(s, file=fh)
+
+
+## Bam stats
+rule mergestats:
+    input:
+        lambda wc: [ "data/stats/insertsize/{aligner}/{ref}/{run}~{lib}.tsv".format(
+                            run=r, lib=l, aligner=wc.aligner, ref=wc.ref)
+                        for l, runs in filter(lambda x: not x[0].lower().startswith("blank"), LIB2RUN.items())
+                        for r in runs ],
+    output:
+        "data/stats/insertsize/{aligner}~{ref}_insertionsize.tsv"
+    shell:
+        "cat {input} > {output}"
+
+
+rule bamstats_insertionsize:
+    input:
+        bam="data/alignments/{aligner}/{ref}/byrun/{run}/{lib}.bam",
+    output:
+        "data/stats/insertsize/{aligner}/{ref}/{run}~{lib}.tsv"
+    log:
+        "data/log/bamstats/{aligner}/{ref}/{run}~{lib}.log"
+    shell:
+        "(samtools stats {input}"
+        " | grep '^IS' | sed -e 's/^IS/{wildcards.run}\\~{wildcards.lib}/'"
+        " > {output})"
+        ">{log} 2>&1"

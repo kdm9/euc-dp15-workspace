@@ -5,13 +5,20 @@ qc:
 
 mapping:
   aligners:
-    - ngm
+    #- ngm
     - bwa
-  ref: grandis
+  refs:
+    - grandisv2chl
 
 refs:
   grandis: /g/data1/xe2/references/eucalyptus/grandis/Egrandis_v2.fasta
+  grandisv2chl: /g/data1/xe2/references/eucalyptus/grandis_v2_chloro/Egrandis-v2-plus-chloro.fasta.gz
 
+chloro:
+  genomes:
+    - grandisv2chl
+  aligners:
+    - bwa
 
 denovodist:
   kwip_sketchsize: 1e9
@@ -19,18 +26,34 @@ denovodist:
   ksize: 21
 
 varcall:
-  theta_prior: 0.02
+  theta_prior: 0.04 # based on mash
   chunksize: 1000000
   aligners:
     # - ngm
     - bwa
   callers:
-    #- freebayes
+    - freebayes
     - mpileup
   genomes:
-    - grandis
+    - grandisv2chl
   samplesets:
     - allsamples
+  filters:
+    default: >
+      -i 'INFO/MQ >= 10 &&
+          QUAL >= 10 &&
+          ALT != "." &&
+          INFO/DP >= 5 &&
+          INFO/AN >= 3'
+    strict: >
+      -i 'INFO/MQ >= 30 &&
+          QUAL >= 40 &&
+          ALT != "." &&
+          INFO/DP >= 10 &&
+          INDEL=0 &&
+          ((INFO/AN / N_SAMPLES)*2) > 0.50'
+      --min-af 0.05:nonmajor
+
 
 angsd:
   mindepth: 10
@@ -44,4 +67,4 @@ angsd:
   glmethod: 2 # gatk
   aligners:
     - ngm
-  genome: grandis
+  genome: grandisv2chl

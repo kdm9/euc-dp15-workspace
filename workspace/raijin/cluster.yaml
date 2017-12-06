@@ -8,8 +8,8 @@ __default__:
 # poolreads: #local rule
 #   time: '1:00:00'
 
-# qcreads: #local rule
-#   time: '0:30:00'
+qcreads: # sometimes a local rule, uncomment if so
+  time: '0:30:00'
 
 read_count:
   time: "6:00:00"
@@ -18,13 +18,13 @@ unique_kmers:
   time: "18:00:00"
 
 ngmap:
-  time: '12:00:00'
-
-bwamem:
   time: '8:00:00'
 
+bwamem:
+  time: '4:00:00'
+
 mergebam:
-  time: '24:00:00'
+  time: '4:00:00'
 
 bcfmerge:
   time: '72:00:00'

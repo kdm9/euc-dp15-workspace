@@ -15,6 +15,25 @@ rule denovodist:
 
 rule mashsketch:
     input:
+        "data/reads/samples/{sample}.fastq.gz",
+                          sample=SAMPLESETS[wc.set]),
+    output:
+        "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
+    log:
+        "data/log/mash/sketch/k{ksize}-s{sketchsize}-{set}.log"
+    threads: 16
+    shell:
+        " mash sketch"
+        "   -k {wildcards.ksize}"
+        "   -s {wildcards.sketchsize}"
+        "   -p {threads}"
+        "   -o {output}"
+        "   {input}"
+        " >{log} 2>&1"
+
+
+rule mashpaste:
+    input:
         lambda wc: expand("data/reads/samples/{sample}.fastq.gz",
                           sample=SAMPLESETS[wc.set]),
     output:

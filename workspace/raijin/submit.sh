@@ -2,7 +2,7 @@
 #PBS -q normal
 #PBS -l ncpus=1
 #PBS -l walltime=24:00:00
-#PBS -l mem=5G
+#PBS -l mem=12G
 #PBS -l jobfs=400G
 #PBS -l other=gdata1
 #PBS -l wd
@@ -30,14 +30,17 @@ QSUB="qsub -q {cluster.queue} -l ncpus={threads} -l jobfs={cluster.jobfs}"
 QSUB="$QSUB -l walltime={cluster.time} -l mem={cluster.mem} -N {cluster.name}"
 QSUB="$QSUB -l wd -o $logdir -e $logdir -P xe2"
 
+mkdir -p data/log/
 snakemake --unlock
 
-snakemake                                \
-    -j 500                               \
-    --cluster-config raijin/cluster.yaml \
-    --local-cores ${PBS_NCPUS}           \
-    --js raijin/jobscript.sh             \
-    --rerun-incomplete                   \
-    --keep-going                         \
-    --cluster "$QSUB" "${target:-all}" 	 \
+snakemake                                 \
+    -j 1000                               \
+    --cluster-config raijin/cluster.yaml  \
+    --local-cores ${PBS_NCPUS}            \
+    --js raijin/jobscript.sh              \
+    --rerun-incomplete                    \
+    --keep-going                          \
+    --snakefile "${snakefile:-Snakefile}" \
+    --cluster "$QSUB"                     \
+    "${target:-all}"                      \
     >data/log/snakemake.log 2>&1

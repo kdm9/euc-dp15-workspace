@@ -75,7 +75,16 @@ def make_lib2sample2lib():
         lib, samp = run.strip().split()
         l2s[lib] = samp
         s2l[samp].append(lib)
-    return l2s, s2l
+    return dict(l2s), dict(s2l)
+
+def make_lib2run():
+    l2r = defaultdict(list)
+    tsvf = open("rawdata/lib2run.tsv")
+    for run in tsvf:
+        lib, run = run.strip().split()
+        l2r[lib].append(run)
+    return dict(l2r)
+
 
 
 def make_samplesets():

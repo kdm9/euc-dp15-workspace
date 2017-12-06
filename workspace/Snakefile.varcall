@@ -7,7 +7,7 @@ SAMPLESETS = {"all_samples": list(SAMP2LIB.keys())}
 
 rule all:
     input:
-        expand("data/variants/{caller}/{aligner}/{ref}/{sampleset}_filtered_{filter}.bcf",
+        expand("data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
                caller=config["varcall"]["callers"],
                aligner=config["varcall"]["aligners"],
                ref=config["varcall"]["genomes"],
@@ -23,8 +23,8 @@ rule freebayes:
         bamlist="data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        bcf=temp("data/variants/freebayes/{aligner}/{ref}/{sampleset}/split/{region}.bcf"),
-        idx=temp("data/variants/freebayes/{aligner}/{ref}/{sampleset}/split/{region}.bcf.csi"),
+        bcf=temp("data/variants/raw_split/freebayes/{aligner}/{ref}/{sampleset}/{region}.bcf"),
+        idx=temp("data/variants/raw_split/freebayes/{aligner}/{ref}/{sampleset}/{region}.bcf.csi"),
     log:
         "data/log/freebayes/{aligner}/{ref}/{sampleset}/{region}.log"
     threads: 1
@@ -58,8 +58,8 @@ rule mpileup:
         bamlist="data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        bcf=temp("data/variants/mpileup/{aligner}/{ref}/{sampleset}/split/{region}.bcf"),
-        idx=temp("data/variants/mpileup/{aligner}/{ref}/{sampleset}/split/{region}.bcf.csi"),
+        bcf=temp("data/variants/raw_split/mpileup/{aligner}/{ref}/{sampleset}/{region}.bcf"),
+        idx=temp("data/variants/raw_split/mpileup/{aligner}/{ref}/{sampleset}/{region}.bcf.csi"),
     log:
         "data/log/mpileup/{aligner}/{ref}/{sampleset}/{region}.log"
     threads: 1
@@ -86,15 +86,15 @@ rule mpileup:
 
 rule bcfmerge:
     input:
-        bcf=lambda wc: expand("data/variants/{caller}/{aligner}/{ref}/{sampleset}/split/{region}.bcf",
+        bcf=lambda wc: expand("data/variants/raw_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf",
                               caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset,
                               region=sorted(VARCALL_REGIONS[wc.ref])),
-        idx=lambda wc: expand("data/variants/{caller}/{aligner}/{ref}/{sampleset}/split/{region}.bcf.csi",
+        idx=lambda wc: expand("data/variants/raw_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf.csi",
                               caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset,
                               region=sorted(VARCALL_REGIONS[wc.ref])),
     output:
-        bcf="data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf",
-        idx="data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
+        bcf="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf",
+        idx="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
     log:
         "data/log/mergebcf/{caller}/{aligner}/{ref}/{sampleset}.log"
     threads: 2
@@ -111,11 +111,11 @@ rule bcfmerge:
 
 rule bcffilter:
     input:
-        bcf="data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf",
-        idx="data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
+        bcf="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf",
+        idx="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
     output:
-        bcf="data/variants/{caller}/{aligner}/{ref}/{sampleset}_filtered-{filter}.bcf",
-        idx="data/variants/{caller}/{aligner}/{ref}/{sampleset}_filtered-{filter}.bcf.csi",
+        bcf="data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
+        idx="data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.csi",
     log:
         "data/log/bcffilter/{caller}/{aligner}/{ref}/{sampleset}/{filter}.log"
     threads: 2

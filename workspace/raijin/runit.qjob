@@ -1,14 +1,14 @@
 #!/bin/bash
-#PBS -q normalbw
+#PBS -q hugemem
 #PBS -l ncpus=28
 #PBS -l walltime=24:00:00
-#PBS -l mem=63G
+#PBS -l mem=800G
 #PBS -l jobfs=400G
 #PBS -l other=gdata1
 #PBS -l wd
 #PBS -M kevin@kdmurray.id.au
 #PBS -m abe
-#PBS -P gh6
+#PBS -P xe2
 
 source /g/data1/xe2/.profile
 
