@@ -7,11 +7,12 @@ SAMPLESETS = {"all_samples": list(SAMP2LIB.keys())}
 
 rule all:
     input:
-        expand("data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf",
+        expand("data/variants/{caller}/{aligner}/{ref}/{sampleset}_filtered_{filter}.bcf",
                caller=config["varcall"]["callers"],
                aligner=config["varcall"]["aligners"],
                ref=config["varcall"]["genomes"],
-               sampleset="all_samples"),
+               sampleset="all_samples",
+               filter=config["varcall"]["filters"]),
 
 
 
@@ -107,3 +108,26 @@ rule bcfmerge:
         "   {input.bcf}"
         " && bcftools index -f {output.bcf}"
         " ) >{log} 2>&1"
+
+rule bcffilter:
+    input:
+        bcf="data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf",
+        idx="data/variants/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
+    output:
+        bcf="data/variants/{caller}/{aligner}/{ref}/{sampleset}_filtered-{filter}.bcf",
+        idx="data/variants/{caller}/{aligner}/{ref}/{sampleset}_filtered-{filter}.bcf.csi",
+    log:
+        "data/log/bcffilter/{caller}/{aligner}/{ref}/{sampleset}/{filter}.log"
+    threads: 2
+    params:
+        filtarg=lambda wc: config["varcall"]["filters"][wc.filter].replace('\n', ' ')
+    shell:
+        "( bcftools view"
+        "   --threads {threads}"
+        "   {params.filtarg}"
+        "   -O b"
+        "   -o {output.bcf}"
+        "   {input.bcf}"
+        " && bcftools index -f {output.bcf}"
+        " ) >{log} 2>&1"
+

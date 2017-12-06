@@ -4,15 +4,24 @@ configfile: "config.yml"
 shell.prefix = "set -xeuo pipefail; "
 
 LIB2SAMP, SAMP2LIB = snkmk.make_lib2sample2lib()
+LIB2RUN = snkmk.make_lib2run()
 SAMPLESETS = {"all_samples": list(SAMP2LIB.keys())}
 
 localrules: qc, map, varcall, denovodist, all
 
+wildcard_constraints:
+    run="[^/]+",
+    lib="[^/]+",
+    aligner="[^/]+",
+    sample="[^/]+",
+    ref="[^/]+",
+
 rule qc:
     input:
-        expand("data/reads/samples/{sample}.fastq.gz", sample=SAMP2LIB),
+        ["data/reads/runs/{run}/{lib}.fastq.gz".format(run=r, lib=l)
+		for l, runs in LIB2RUN.items()
+		for r in runs],
         "data/readstats/readnum.tsv",
-        "data/readstats/unique-kmers.tsv",
 
 rule map:
     input:
@@ -22,36 +31,24 @@ rule map:
                sample=SAMP2LIB)
 
 
-rule denovodist:
-    input:
-        expand("data/mash/k{ksize}-s{sketchsize}/{set}.dist",
-                ksize=config["denovodist"]["ksize"],
-                sketchsize=config["denovodist"]["mash_sketchsize"],
-                set=[s for s, v in SAMPLESETS.items() if len(v) >=3]),
-        expand("data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
-                ksize=config["denovodist"]["ksize"],
-                sketchsize=config["denovodist"]["kwip_sketchsize"],
-                set=[s for s, v in SAMPLESETS.items() if len(v) >=3]),
-
 rule all:
     input:
         rules.qc.input,
         rules.map.input,
-        rules.denovodist.input,
 
 
-localrules: qcreads
+#localrules: qcreads
 rule qcreads:
     input:
-        r1="rawdata/libraries/{lib}_R1.fastq.gz",
-        r2="rawdata/libraries/{lib}_R2.fastq.gz",
+        r1="rawdata/runs/{run}/{lib}_R1.fastq.gz",
+        r2="rawdata/runs/{run}/{lib}_R2.fastq.gz",
     output:
-        reads="data/reads/libraries/{lib}.fastq.gz",
+        reads="data/reads/runs/{run}/{lib}.fastq.gz",
     log:
-        log="data/log/adapterremoval/{lib}.log",
-        settings="data/stats/adapterremoval/{lib}.txt",
+        log="data/log/adapterremoval/{run}/{lib}.log",
+        settings="data/stats/adapterremoval/{run}/{lib}.txt",
     threads:
-        2
+        1
     params:
         adp1=config["qc"]["adapter1"],
         adp2=config["qc"]["adapter2"],
@@ -77,19 +74,12 @@ rule qcreads:
         "   /dev/stdin"
         ") >{log.log} 2>&1"
 
-localrules: poolreads
-rule poolreads:
-    input:
-        reads=lambda wc: expand("data/reads/libraries/{lib}.fastq.gz", lib=SAMP2LIB[wc.sample]),
-    output:
-        reads="data/reads/samples/{sample}.fastq.gz",
-    threads: 1
-    shell:
-        "cat {input} >{output}"
 
 rule read_count:
     input:
-        expand("data/reads/libraries/{run}.fastq.gz", run=LIB2SAMP),
+        ["data/reads/runs/{run}/{lib}.fastq.gz".format(run=r, lib=l)
+		for l, runs in LIB2RUN.items()
+		for r in runs],
     output:
         "data/readstats/readnum.tsv",
     threads:
@@ -103,48 +93,31 @@ rule read_count:
         "    >{output}"
         " ) 2>{log}"
 
-rule unique_kmers:
-    input:
-        expand("data/reads/libraries/{run}.fastq.gz", run=LIB2SAMP),
-    output:
-        "data/readstats/unique-kmers.tsv",
-    threads:
-        16
-    params:
-        kmersize=31,
-    log:
-        "data/log/readstats/unique-kmers.log",
-    shell:
-        "( kdm-unique-kmers.py"
-        "    -t {threads}"
-        "    -k {params.kmersize}"
-        "    {input}"
-        "    >{output}"
-        " ) 2>{log}"
-
 rule ngmap:
     input:
-        reads="data/reads/samples/{sample}.fastq.gz",
+        reads=["data/reads/runs/{run}/{lib}.fastq.gz".format(run=r, lib=l)
+		for l, runs in LIB2RUN.items()
+		for r in runs],
         ref=lambda wc: config['refs'][wc.ref]
     output:
-        bam="data/alignments/ngm/{ref}/{sample}.bam",
-        bai="data/alignments/ngm/{ref}/{sample}.bam.bai",
+        bam="data/alignments/ngm/{ref}/byrun/{run}/{lib}.bam",
+        bai="data/alignments/ngm/{ref}/byrun/{run}/{lib}.bam.bai",
     log:
-        "data/log/ngm/{ref}/{sample}.log"
+        "data/log/ngm/{ref}/{run}/{lib}.log"
     threads:
-        8
+        4
     shell:
         "( ngm"
-        "   -q {input.reads}"
+        "   -q <(zcat {input.reads})"
         "   --paired --broken-pairs"
         "   -r {input.ref}"
         "   -t {threads}"
-        "   --rg-id {wildcards.sample}"
+        "   --rg-id {wildcards.run}_{wildcards.lib}"
         "   --rg-sm {wildcards.sample}"
         "   --very-sensitive"
         " | samtools view -Suh -"
         " | samtools sort"
-        "   -T ${{TMPDIR:-/tmp}}/{wildcards.sample}"
+        "   -T ${{TMPDIR:-/tmp}}/{wildcards.run}_{wildcards.lib}"
         "   -@ {threads}"
         "   -m 1G"
         "   -o {output.bam}"
@@ -154,22 +127,24 @@ rule ngmap:
 
 rule bwamem:
     input:
-        reads="data/reads/samples/{sample}.fastq.gz",
+        reads=["data/reads/runs/{run}/{lib}.fastq.gz".format(run=r, lib=l)
+		for l, runs in LIB2RUN.items()
+		for r in runs],
         ref=lambda wc: config['refs'][wc.ref]
     output:
-        bam="data/alignments/bwa/{ref}/{sample}.bam",
-        bai="data/alignments/bwa/{ref}/{sample}.bam.bai",
+        bam="data/alignments/bwa/{ref}/byrun/{run}/{lib}.bam",
+        bai="data/alignments/bwa/{ref}/byrun/{run}/{lib}.bam.bai",
     log:
-        "data/log/bwa/{ref}/{sample}.log"
+        "data/log/bwa/{ref}/{run}/{lib}.log"
     threads:
-        8
+        4
     shell:
         "( bwa mem"
         "   -p" # paired input
         "   -t {threads}"
-        "   -R '@RG\\tID:{wildcards.sample}\\tSM:{wildcards.sample}'"
+        "   -R '@RG\\tID:{wildcards.run}_{wildcards.lib}\\tSM:{wildcards.sample}'"
         "   {input.ref}"
-        "   {input.reads}"
+        "   <(zcat {input.reads})"
         " | samtools view -Suh -"
         " | samtools sort"
         "   -T ${{TMPDIR:-/tmp}}/{wildcards.sample}"
@@ -180,15 +155,17 @@ rule bwamem:
         " && samtools index {output.bam}"
         " ) >{log} 2>&1"
 
-rule mergebam:
+rule mergebam_samp:
     input:
-        expand("data/alignments/{{aligner}}/{{ref}}/{sample}.bam", sample=SAMP2LIB),
+        lambda wc: ["data/alignments/{aln}/{ref}/byrun/{run}/{lib}.bam".format(
+                            run=r, lib=l, aln=wc.aligner, ref=wc.ref)
+	                for l in SAMP2LIB[wc.sample] for r in LIB2RUN[l]]
     output:
-        bam="data/alignments/{aligner}/{ref}_merged.bam",
-        bai="data/alignments/{aligner}/{ref}_merged.bam.bai",
+        bam="data/alignments/{aligner}/{ref}/{sample}.bam",
+        bai="data/alignments/{aligner}/{ref}/{sample}.bam.bai",
     log:
-        "data/log/mergebam/{ref}.log"
-    threads: 2
+        "data/log/mergesamplebam/{aligner}/{ref}/{sample}.log"
+    threads: 1
     shell:
         "( samtools merge"
         "   -@ {threads}"
@@ -201,7 +178,7 @@ rule mergebam:
 localrules: bamlist
 rule bamlist:
     input:
-        lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam",
+        lambda wc: expand("data/alignments/{aligner}/{sample}.bam",
                           aligner=wc.aligner, ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
 
     output:
@@ -210,119 +187,3 @@ rule bamlist:
         with open(output[0], "w") as fh:
             for s in input:
                 print(s, file=fh)
-
-
-#--------------------------------------------------------------------------------
-#-                               de novo distance                               -
-#--------------------------------------------------------------------------------
-
-rule mashsketch:
-    input:
-        lambda wc: expand("data/reads/samples/{sample}.fastq.gz",
-                          sample=SAMPLESETS[wc.set]),
-    output:
-        "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
-    log:
-        "data/log/mash/sketch/k{ksize}-s{sketchsize}-{set}.log"
-    threads: 16
-    shell:
-        " mash sketch"
-        "   -k {wildcards.ksize}"
-        "   -s {wildcards.sketchsize}"
-        "   -p {threads}"
-        "   -o data/mash/k{wildcards.ksize}-s{wildcards.sketchsize}/{wildcards.set}"
-        "   {input}"
-        " >{log} 2>&1"
-
-
-rule mash:
-    input:
-        "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
-    output:
-        dist="data/mash/k{ksize}-s{sketchsize}/{set}.mashdist",
-    log:
-        "data/log/mash/dist/k{ksize}-s{sketchsize}-{set}.log"
-    threads: 16
-    shell:
-        "mash dist"
-        "   -p {threads}"
-        "   {input} {input}" # needs it twice
-        " >{output}"
-        " 2>{log}"
-
-localrules: mashdist
-rule mashdist:
-    input:
-        "data/mash/k{ksize}-s{sketchsize}/{set}.mashdist"
-    output:
-        "data/mash/k{ksize}-s{sketchsize}/{set}.dist"
-    run:
-        from collections import defaultdict
-        from os.path import basename
-        def fname2id(fname):
-            fname = basename(fname)
-            exts = [".gz", ".fastq", ".fq"]
-            for ext in exts:
-                if fname.endswith(ext):
-                    fname = fname[:-len(ext)]
-            return fname
-
-        dists = defaultdict(dict)
-        with open(input[0]) as fh:
-            for line in fh:
-                dist = line.strip().split('\t')
-                id1 = fname2id(dist[0])
-                id2 = fname2id(dist[1])
-                dist = float(dist[2])
-                dists[id1][id2] = dist
-
-        with open(output[0], 'w') as ofile:
-            ids = [''] + list(sorted(dists.keys()))
-            print(*ids, sep='\t', file=ofile)
-            for id1, row in sorted(dists.items()):
-                rowdists = [it[1] for it in sorted(row.items())]
-                print(id1, *rowdists, sep='\t', file=ofile)
-
-rule countsketch:
-    input:
-        "data/reads/samples/{sample}.fastq.gz",
-    output:
-        ct="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz",
-        info="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz.info",
-        tsv="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz.info.tsv",
-    log:
-        "data/log/kwip/sketch/k{ksize}-s{sketchsize}-{sample}.log"
-    threads:
-        4
-    shell:
-        "load-into-counting.py"
-        "   -N 1"
-        "   -x {wildcards.sketchsize}"
-        "   -k {wildcards.ksize}"
-        "   -b"
-        "   -f"
-        "   -s tsv"
-        "   -T {threads}"
-        "   {output.ct}"
-        "   {input}"
-        " >{log} 2>&1"
-
-rule kwip:
-    input:
-        lambda wc: expand("data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz",
-                            ksize=wc.ksize, sketchsize=wc.sketchsize,
-                            sample=SAMPLESETS[wc.set]),
-    output:
-        d="data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
-        k="data/kwip/k{ksize}-s{sketchsize}/{set}.kern",
-    log:
-        "data/log/kwip/dist/k{ksize}-s{sketchsize}-{set}.log"
-    threads:
-        8
-    shell:
-        "kwip"
-        " -d {output.d}"
-        " -k {output.k}"
-        " -t {threads}"
-        " {input}"
-        " >{log} 3>&1"

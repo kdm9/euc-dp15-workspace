@@ -1,0 +1,26 @@
+import snkmk
+configfile: "config.yml"
+
+CHLORO_REGION = "scaffold_c37"
+LIB2SAMP, SAMP2LIB = snkmk.make_lib2sample2lib()
+
+rule all:
+    input:
+        expand("data/chloro/stomped/{aligner}/{ref}/{sample}.fasta",
+               aligner=config["chloro"]["aligners"],
+               ref=config["chloro"]["genomes"],
+	       sample=SAMP2LIB),
+
+rule stomp:
+    input:
+        bam="data/alignments/{aligner}/{ref}/{sample}.bam"
+    output:
+        "data/chloro/stomped/{aligner}/{ref}/{sample}.fasta"
+    log:
+        "data/log/stomped/{aligner}/{ref}/{sample}.log"
+    params:
+        region=CHLORO_REGION,
+    shell:
+        "(samtools mpileup -r {params.region} {input}"
+        " | readstomper.pl -m 100 -f /dev/null >{output} )"
+        ">{log} 2>&1"
