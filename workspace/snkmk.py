@@ -66,25 +66,19 @@ def _iter_metadata():
             yield samp
 
 
-def make_lib2sample2lib():
-    l2s = {}
-    s2l = defaultdict(list)
-    tsvf = open("../metadata/lib2sample.tsv")
-    next(tsvf)  # Skip header
-    for run in tsvf:
-        lib, samp = run.strip().split()
-        l2s[lib] = samp
-        s2l[samp].append(lib)
-    return dict(l2s), dict(s2l)
-
-def make_lib2run():
-    l2r = defaultdict(list)
-    tsvf = open("rawdata/lib2run.tsv")
-    for run in tsvf:
-        lib, run = run.strip().split()
-        l2r[lib].append(run)
-    return dict(l2r)
-
+def make_runlib2samp():
+    rl2s = {}
+    s2rl = defaultdict(list)
+    csvf = csv.DictReader(open("../metadata/seq-metadata.csv"))
+    for run in csvf:
+        if not run["library"] or run["library"].lower().startswith("blank"):
+            # Skip blanks
+            continue
+        rl = (run["run"], run["library"])
+        samp = run["sample"]
+        rl2s[rl] = samp
+        s2rl[samp].append(rl)
+    return dict(rl2s), dict(s2rl)
 
 
 def make_samplesets():

@@ -3,9 +3,8 @@ configfile: "config.yml"
 
 shell.prefix = "set -xeuo pipefail; "
 
-LIB2SAMP, SAMP2LIB = snkmk.make_lib2sample2lib()
-LIB2RUN = snkmk.make_lib2run()
-SAMPLESETS = {"all_samples": list(SAMP2LIB.keys())}
+RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
+SAMPLESETS = {"all_samples": list(SAMP2RUNLIB.keys())}
 
 
 localrules: qc, map,  all
@@ -19,9 +18,8 @@ wildcard_constraints:
 
 rule qc:
     input:
-        ["data/reads/runs/{run}/{lib}.fastq.gz".format(run=r, lib=l)
-		for l, runs in LIB2RUN.items()
-		for r in runs],
+        ["data/reads/runs/{run}/{lib}.fastq.gz".format(run=run, lib=lib)
+		for run, lib in RUNLIB2SAMP],
         "data/readstats/readnum.tsv",
 
 rule map:
@@ -29,7 +27,7 @@ rule map:
         expand("data/alignments/{aligner}/{ref}/{sample}.bam",
                ref=config["mapping"]["refs"],
                aligner=config["mapping"]["aligners"],
-               sample=SAMP2LIB),
+               sample=SAMP2RUNLIB),
         expand("data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
                ref=config["mapping"]["refs"],
                aligner=config["mapping"]["aligners"],
@@ -90,9 +88,8 @@ rule qcreads:
 
 rule read_count:
     input:
-        ["data/reads/runs/{run}/{lib}.fastq.gz".format(run=r, lib=l)
-		for l, runs in LIB2RUN.items()
-		for r in runs],
+        ["data/reads/runs/{run}/{lib}.fastq.gz".format(run=run, lib=lib)
+		for run, lib in RUNLIB2SAMP],
     output:
         "data/readstats/readnum.tsv",
     threads:
@@ -118,7 +115,7 @@ rule ngmap:
     threads:
         4
     params:
-        sample=lambda wc: LIB2SAMP[wc.lib],
+        sample=lambda wc: RUNLIB2SAMP.get((wc.run, wc.lib), "{}~{}".format(wc.run, wc.lib)),
     shell:
         "( ngm"
         "   -q {input.reads}"
@@ -150,7 +147,7 @@ rule bwamem:
     threads:
         4
     params:
-        sample=lambda wc: LIB2SAMP.get(wc.lib, wc.lib),
+        sample=lambda wc: RUNLIB2SAMP.get((wc.run, wc.lib), "{}~{}".format(wc.run, wc.lib)),
     shell:
         "( bwa mem"
         "   -p" # paired input
@@ -172,7 +169,7 @@ rule mergebam_samp:
     input:
         lambda wc: ["data/alignments/{aln}/{ref}/byrun/{run}/{lib}.bam".format(
                             run=r, lib=l, aln=wc.aligner, ref=wc.ref)
-	                for l in SAMP2LIB[wc.sample] for r in LIB2RUN[l]]
+	                for r, l in SAMP2RUNLIB[wc.sample]]
     output:
         bam="data/alignments/{aligner}/{ref}/{sample}.bam",
         bai="data/alignments/{aligner}/{ref}/{sample}.bam.bai",
@@ -207,8 +204,7 @@ rule mergestats:
     input:
         lambda wc: [ "data/stats/insertsize/{aligner}/{ref}/{run}~{lib}.tsv".format(
                             run=r, lib=l, aligner=wc.aligner, ref=wc.ref)
-                        for l, runs in filter(lambda x: not x[0].lower().startswith("blank"), LIB2RUN.items())
-                        for r in runs ],
+                        for r, l in RUNLIB2SAMP],
     output:
         "data/stats/insertsize/{aligner}~{ref}_insertionsize.tsv"
     shell:
