@@ -24,7 +24,7 @@ ofinterest = allmd %>%
            SampleSet != "Msupple",
            !grepl("Recollect", ID)) %>% 
     select(ID, SampleSet, Species, Location, Latitude, Longitude, SeedYesNo, SeedNotes, Sequenced) %>% 
-    arrange(Species, Location, SeedYesNo)
-write.csv(ofinterest, "magnificata/ofinterest.csv")
+    arrange(Species, Location, ID, SeedYesNo)
+write.csv(ofinterest, "magnificata/ofinterest.csv", row.names = F)
 ```
 
