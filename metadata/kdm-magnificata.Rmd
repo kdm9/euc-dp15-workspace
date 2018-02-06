@@ -1,0 +1,30 @@
+---
+title: "KDM Magnificata Sampling"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(ggmap)
+```
+
+## All samples
+
+```{r}
+allmd = read.csv("all-projects-metadata/kdm-metadata-samples.csv")
+str(allmd)
+table(allmd$Species)
+```
+
+```{r}
+ofinterest = allmd %>% 
+    filter(Species %in% c("conica", "magnificata", "sp. aff. magnificata", "melliodora"),
+           SampleSet != "Msupple",
+           !grepl("Recollect", ID)) %>% 
+    select(ID, SampleSet, Species, Location, Latitude, Longitude, SeedYesNo, SeedNotes, Sequenced) %>% 
+    arrange(Species, Location, SeedYesNo)
+write.csv(ofinterest, "magnificata/ofinterest.csv")
+```
+
