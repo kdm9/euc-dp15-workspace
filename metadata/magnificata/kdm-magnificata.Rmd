@@ -28,5 +28,5 @@ ofinterest = allmd %>%
     filter(Longitude > 149, Latitude > -32, Latitude < -29)
 
 write.csv(ofinterest, "ofinterest.csv", row.names = F)
+knitr::kable(ofinterest)
 ```
-
