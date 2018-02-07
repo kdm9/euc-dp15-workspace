@@ -35,6 +35,7 @@ So we have 6 duplicated IDs
 md.dups = md %>% 
     filter(ID %in% dup.ids) %>% 
     arrange(ID)
+write.csv(md.dups, "DuplicateSamples.csv", row.names = F)
 ```
 
 ```{r echo=F}
