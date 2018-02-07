@@ -13,7 +13,7 @@ library(ggmap)
 ## All samples
 
 ```{r}
-allmd = read.csv("all-projects-metadata/kdm-metadata-samples.csv")
+allmd = read.csv("../all-projects-metadata/kdm-metadata-samples.csv")
 str(allmd)
 table(allmd$Species)
 ```
@@ -24,7 +24,9 @@ ofinterest = allmd %>%
            SampleSet != "Msupple",
            !grepl("Recollect", ID)) %>% 
     select(ID, SampleSet, Species, Location, Latitude, Longitude, SeedYesNo, SeedNotes, Sequenced) %>% 
-    arrange(Species, Location, ID, SeedYesNo)
-write.csv(ofinterest, "magnificata/ofinterest.csv", row.names = F)
+    arrange(Species, Location, ID, SeedYesNo) %>% 
+    filter(Longitude > 149, Latitude > -32, Latitude < -29)
+
+write.csv(ofinterest, "ofinterest.csv", row.names = F)
 ```
 
