@@ -15,8 +15,7 @@ rule denovodist:
 
 rule mashsketch:
     input:
-        "data/reads/samples/{sample}.fastq.gz",
-                          sample=SAMPLESETS[wc.set]),
+        "data/alignments/bwa/grandisv2chl/{sample}.bam",
     output:
         "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
     log:

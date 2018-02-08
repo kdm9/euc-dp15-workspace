@@ -2,7 +2,7 @@
 #PBS -q normal
 #PBS -l ncpus=1
 #PBS -l walltime=24:00:00
-#PBS -l mem=12G
+#PBS -l mem=10G
 #PBS -l jobfs=400G
 #PBS -l other=gdata1
 #PBS -l wd
@@ -36,11 +36,11 @@ snakemake --unlock
 snakemake                                 \
     -j 1000                               \
     --cluster-config raijin/cluster.yaml  \
-    --local-cores ${PBS_NCPUS}            \
+    --local-cores ${PBS_NCPUS:-16}        \
     --js raijin/jobscript.sh              \
     --rerun-incomplete                    \
     --keep-going                          \
     --snakefile "${snakefile:-Snakefile}" \
     --cluster "$QSUB"                     \
     "${target:-all}"                      \
-    >data/log/snakemake.log 2>&1
+    >data/log/${PBS_JOBID:-}snakemake.log 2>&1

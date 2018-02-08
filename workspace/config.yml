@@ -5,14 +5,15 @@ qc:
 
 mapping:
   aligners:
-    #- ngm
+    - ngm
     - bwa
+  # - stampy
   refs:
     - grandisv2chl
 
 refs:
   grandis: /g/data1/xe2/references/eucalyptus/grandis/Egrandis_v2.fasta
-  grandisv2chl: /g/data1/xe2/references/eucalyptus/grandis_v2_chloro/Egrandis-v2-plus-chloro.fasta.gz
+  grandisv2chl: /g/data1/xe2/references/eucalyptus/grandis_v2_chloro/Egrandis-v2-plus-chloro.fasta
 
 chloro:
   genomes:
@@ -27,9 +28,8 @@ denovodist:
 
 varcall:
   theta_prior: 0.04 # based on mash
-  chunksize: 1000000
+  chunksize: 1000000 # Otherwise freebayes take way too long
   aligners:
-    # - ngm
     - bwa
   callers:
     - freebayes
@@ -50,10 +50,7 @@ varcall:
           QUAL >= 40 &&
           ALT != "." &&
           INFO/DP >= 10 &&
-          INDEL=0 &&
-          ((INFO/AN / N_SAMPLES)*2) > 0.50'
-      --min-af 0.05:nonmajor
-
+          ((INFO/AN / N_SAMPLES)*2) > 0.50' # presence rate, >1/2 non-missing
 
 angsd:
   mindepth: 10
@@ -63,7 +60,7 @@ angsd:
   snppval: 1e-3
   minind: 10
   minmaf: 0.02
-  minMAD: 3 # Number of reads with minor alle
+  minMAD: 3 # Number of reads with minor allel
   glmethod: 2 # gatk
   aligners:
     - ngm

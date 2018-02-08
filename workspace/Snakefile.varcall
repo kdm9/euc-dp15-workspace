@@ -2,8 +2,8 @@ import snkmk
 configfile: "config.yml"
 VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
 CHROMOSOMES = snkmk.make_chroms(config["refs"])
-LIB2SAMP, SAMP2LIB = snkmk.make_lib2sample2lib()
-SAMPLESETS = {"all_samples": list(SAMP2LIB.keys())}
+RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
+SAMPLESETS = {"all_samples": list(SAMP2RUNLIB.keys())}
 
 rule all:
     input:
@@ -18,9 +18,7 @@ rule all:
 
 rule freebayes:
     input:
-        bams=lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam", aligner=wc.aligner,
-                               ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
-        bamlist="data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
+        bam="data/alignments/{aligner}/{ref}/sets/{sampleset}.bam",
         ref=lambda wc: config['refs'][wc.ref],
     output:
         bcf=temp("data/variants/raw_split/freebayes/{aligner}/{ref}/{sampleset}/{region}.bcf"),
@@ -37,14 +35,11 @@ rule freebayes:
         "   --use-reference-allele"
         "   --min-mapping-quality 10"
         "   --min-base-quality 10"
-        "   --min-alternate-fraction 0.1"
-        "   --min-alternate-count 1"
-        "   --min-alternate-total 4"
         "   --use-mapping-quality"
         "   --genotype-qualities"
         "   --region '{params.region}'"
         "   --fasta-reference {input.ref}"
-        "   --bam-list {input.bamlist}"
+        "   {input.bam}"
         " | bcftools view"
         "   -O b"
         "   -o {output.bcf}"

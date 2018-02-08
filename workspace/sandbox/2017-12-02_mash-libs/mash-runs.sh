@@ -1,7 +1,7 @@
 #!/bin/bash
 #PBS -q expressbw
 #PBS -l ncpus=28
-#PBS -l walltime=1:00:00
+#PBS -l walltime=8:00:00
 #PBS -l mem=20G
 #PBS -l jobfs=400G
 #PBS -l other=gdata1
@@ -14,21 +14,18 @@ source /g/data1/xe2/.profile
 
 export TMPDIR=$PBS_JOBFS
 
-module load mash seqhax
+module load mash seqhax parallel
 
 mkdir -p sketches/
 dir=/g/data/xe2/datasets/rose-andrew/rawdata/runs/
-for pl in $(ls $dir)
+( for pl in $(ls $dir)
 do
     for lib in $(ls $dir/$pl/*_R1.fastq.gz)
     do
         lib=$(basename $lib _R1.fastq.gz)
-        mkfifo ${pl}~${lib}
-        mash sketch -o sketches/${pl}~${lib}.msh -p ${PBS_NCPUS-1} -k 21 -s 10000 ${pl}~${lib} &
-        seqhax pecheck -o ${pl}~${lib} $dir/$pl/${lib}_R[12].fastq.gz
-        rm -f ${pl}~${lib}
+        echo -e "$pl\t$lib"
     done
-done
+done ) | parallel --colsep '\t' -j $PBS_NCPUS bash ./runmash.sh {1} {2}
 
 mash paste all-runs.msh sketches/*
 

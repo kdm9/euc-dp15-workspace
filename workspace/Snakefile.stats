@@ -1,6 +1,0 @@
-import snkmk
-configfile: "config.yml"
-
-LIB2RUN = snkmk.make_lib2run()
-
-

@@ -15,6 +15,7 @@ wildcard_constraints:
     aligner="[^/]+",
     sample="[^/]+",
     ref="[^/]+",
+    type="[^/]+",
 
 rule qc:
     input:
@@ -22,7 +23,15 @@ rule qc:
 		for run, lib in RUNLIB2SAMP],
         "data/readstats/readnum.tsv",
 
-rule map:
+rule maponly:
+    input:
+        lambda wc: ["data/alignments/{aln}/{ref}/byrun/{run}/{lib}.bam".
+                        format(run=r, lib=l, aln=a, ref=ref)
+                        for r, l in RUNLIB2SAMP
+                        for a in config["mapping"]["aligners"]
+                        for ref in config["mapping"]["refs"]],
+
+rule mapsamp:
     input:
         expand("data/alignments/{aligner}/{ref}/{sample}.bam",
                ref=config["mapping"]["refs"],
@@ -35,17 +44,21 @@ rule map:
 
 rule bamstats:
     input:
-        expand("data/stats/insertsize/{aligner}~{ref}_insertionsize.tsv",
+        expand("data/stats/{type}-{aligner}~{ref}.tsv",
                aligner=config["mapping"]["aligners"],
-               ref=config["mapping"]["refs"]),
-
+               ref=config["mapping"]["refs"],
+               type=["insertsize", "qualstat"]),
 
 
 rule all:
     input:
         rules.qc.input,
-        rules.map.input,
-	rules.bamstats.input,
+        rules.mapsamp.input,
+        rules.bamstats.input,
+        expand("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam",
+               ref=config["mapping"]["refs"],
+               aligner=config["mapping"]["aligners"],
+               sampleset=SAMPLESETS),
 
 
 #localrules: qcreads
@@ -93,7 +106,7 @@ rule read_count:
     output:
         "data/readstats/readnum.tsv",
     threads:
-        28
+        16
     log:
         "data/log/readstats/seqhax-stats.log",
     shell:
@@ -113,7 +126,7 @@ rule ngmap:
     log:
         "data/log/ngm/{ref}/{run}/{lib}.log"
     threads:
-        4
+        16
     params:
         sample=lambda wc: RUNLIB2SAMP.get((wc.run, wc.lib), "{}~{}".format(wc.run, wc.lib)),
     shell:
@@ -124,7 +137,7 @@ rule ngmap:
         "   -t {threads}"
         "   --rg-id {wildcards.run}_{wildcards.lib}"
         "   --rg-sm {params.sample}"
-        "   --sensitive"
+        "   --sensitivity 0.5" # this is the mean from a bunch of different runs
         " | samtools view -Suh -"
         " | samtools sort"
         "   -T ${{TMPDIR:-/tmp}}/ngm_{wildcards.run}_{wildcards.lib}"
@@ -145,7 +158,7 @@ rule bwamem:
     log:
         "data/log/bwa/{ref}/{run}/{lib}.log"
     threads:
-        4
+        8
     params:
         sample=lambda wc: RUNLIB2SAMP.get((wc.run, wc.lib), "{}~{}".format(wc.run, wc.lib)),
     shell:
@@ -165,6 +178,43 @@ rule bwamem:
         " && samtools index {output.bam}"
         " ) >{log} 2>&1"
 
+rule stampy:
+    input:
+        reads="data/reads/runs/{run}/{lib}.fastq.gz",
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        bam="data/alignments/stampy/{ref}/byrun/{run}/{lib}.bam",
+        bai="data/alignments/stampy/{ref}/byrun/{run}/{lib}.bam.bai",
+    log:
+        "data/log/stampy/{ref}/{run}/{lib}.log"
+    threads:
+        16
+    priority: 4
+    params:
+        sample=lambda wc: RUNLIB2SAMP.get((wc.run, wc.lib), "{}~{}".format(wc.run, wc.lib)),
+    shell:
+        "( mkdir /dev/shm/stampyref_{wildcards.run}_{wildcards.lib}"
+        " && cp {input.ref} {input.ref}.st* /dev/shm/stampyref_{wildcards.run}_{wildcards.lib}/"
+        " && stampy.py"
+        "   -t {threads}"
+        "   --sensitive"
+        "   --substitutionrate=0.05"
+        "   -g /dev/shm/stampyref_{wildcards.run}_{wildcards.lib}/$(basename {input.ref})"
+        "   -h /dev/shm/stampyref_{wildcards.run}_{wildcards.lib}/$(basename {input.ref})"
+        "   -M {input.reads}"
+        "   --readgroup='ID:{wildcards.run}_{wildcards.lib},SM:{params.sample}'"
+        " | samtools view -Suh -"
+        " | samtools sort"
+        "   -T ${{TMPDIR:-/tmp}}/stampy_{wildcards.run}_{wildcards.lib}"
+        "   -@ {threads}"
+        "   -m 1G"
+        "   -o {output.bam}"
+        "   -" # stdin
+        " && samtools index {output.bam}"
+        " ; rm -rf /dev/shm/stampyref_{wildcards.run}_{wildcards.lib}"
+        " ) >{log} 2>&1"
+
+localrules: mergebam_samp
 rule mergebam_samp:
     input:
         lambda wc: ["data/alignments/{aln}/{ref}/byrun/{run}/{lib}.bam".format(
@@ -191,6 +241,7 @@ rule bamlist:
         lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam",
                           aligner=wc.aligner, ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
 
+    priority: 2
     output:
         "data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
     run:
@@ -199,27 +250,64 @@ rule bamlist:
                 print(s, file=fh)
 
 
+localrules: mergebam_set
+rule mergebam_set:
+    input:
+        lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam",
+                          aligner=wc.aligner, ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
+
+    output:
+        bam="data/alignments/{aligner}/{ref}/sets/{sampleset}.bam",
+        bai="data/alignments/{aligner}/{ref}/sets/{sampleset}.bam.bai",
+    log:
+        "data/log/mergesetbam/{aligner}/{ref}/{sampleset}.log"
+    threads: 1
+    shell:
+        "( samtools merge"
+        "   -@ {threads}"
+        "   {output.bam}"
+        "   {input}"
+        " && samtools index {output.bam}"
+        " ) >{log} 2>&1"
+
 ## Bam stats
+localrules: mergestats
 rule mergestats:
     input:
-        lambda wc: [ "data/stats/insertsize/{aligner}/{ref}/{run}~{lib}.tsv".format(
-                            run=r, lib=l, aligner=wc.aligner, ref=wc.ref)
+        lambda wc: [ "data/stats/{type}/{aligner}/{ref}/{run}~{lib}.tsv".format(
+                            run=r, lib=l, aligner=wc.aligner, ref=wc.ref, type=wc.type)
                         for r, l in RUNLIB2SAMP],
     output:
-        "data/stats/insertsize/{aligner}~{ref}_insertionsize.tsv"
+        "data/stats/{type}-{aligner}~{ref}.tsv"
     shell:
         "cat {input} > {output}"
 
 
+localrules: bamstats_insertionsize
 rule bamstats_insertionsize:
     input:
-        bam="data/alignments/{aligner}/{ref}/byrun/{run}/{lib}.bam",
+        "data/alignments/{aligner}/{ref}/byrun/{run}/{lib}.bam",
     output:
         "data/stats/insertsize/{aligner}/{ref}/{run}~{lib}.tsv"
     log:
-        "data/log/bamstats/{aligner}/{ref}/{run}~{lib}.log"
+        "data/log/insertionsize/{aligner}/{ref}/{run}~{lib}.log"
     shell:
-        "(samtools stats {input}"
-        " | grep '^IS' | sed -e 's/^IS/{wildcards.run}\\~{wildcards.lib}/'"
+        "(samtools stats -l 2 -i 5000 -x  {input}"
+        " | grep '^IS' {input}"
+        " | sed -e 's/^IS/{wildcards.run}\\~{wildcards.lib}/'"
         " > {output})"
         ">{log} 2>&1"
+
+rule qualstat:
+    input:
+        bam="data/alignments/{aligner}/{ref}/byrun/{run}/{lib}.bam",
+    output:
+        "data/stats/qualstat/{aligner}/{ref}/{run}~{lib}.tsv"
+    log:
+        "data/log/qualstat/{aligner}/{ref}/{run}~{lib}.log"
+    shell:
+        "(samtools view {input} "
+        "   | awk '{{print $5}}'"
+        "   | seqhax clihist"
+        "   | sed -e 's/^/{wildcards.run}~{wildcards.lib}	/'"
+        "   > {output} ) >{log} 2>&1"
