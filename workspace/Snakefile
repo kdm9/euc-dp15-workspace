@@ -61,6 +61,34 @@ rule all:
                sampleset=SAMPLESETS),
 
 
+rule sradl:
+    output: "rawdata/sra/{lib}.sra",
+    log: "data/log/sradl/{lib}.log"
+    shell:
+        "wget -nv -c -O {output}"
+        "   https://sra-download.ncbi.nlm.nih.gov/srapub/{wildcards.lib}"
+        " >{log} 2>&1"
+
+rule sradump:
+    input: "rawdata/sra/{lib}.sra",
+    output:
+        r1="rawdata/runs/sra/{lib}_R1.fastq.gz",
+        r2="rawdata/runs/sra/{lib}_R2.fastq.gz",
+    threads: 1
+    shell:
+        "( fastq-dump"
+        "   --split-spot"
+        "   --skip-technical"
+        "   --stdout"
+        "   --readids"
+        "   --defline-seq '@$sn/$ri'"
+        "   --defline-qual '+'"
+        "   {input}"
+        " | seqhax pairs"
+        "   -1 >(gzip -3 >{output.r1})"
+        "   -2 >(gzip -3 >{output.r2})"
+        ") >{log} 2>&1"
+
 #localrules: qcreads
 rule qcreads:
     input:
