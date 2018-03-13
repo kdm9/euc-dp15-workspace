@@ -3,9 +3,9 @@ configfile: "config.yml"
 VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
 CHROMOSOMES = snkmk.make_chroms(config["refs"])
 RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
-SAMPLESETS = {"all_samples": list(SAMP2RUNLIB.keys())}
+SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
 
-rule all:
+rule all_samples_only:
     input:
         expand("data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
                caller=config["varcall"]["callers"],
@@ -14,6 +14,14 @@ rule all:
                sampleset="all_samples",
                filter=config["varcall"]["filters"]),
 
+rule everything:
+    input:
+        expand("data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
+               caller=config["varcall"]["callers"],
+               aligner=config["varcall"]["aligners"],
+               ref=config["varcall"]["genomes"],
+               sampleset=SAMPLESETS,
+               filter=config["varcall"]["filters"]),
 
 
 rule freebayes:

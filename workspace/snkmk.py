@@ -39,7 +39,6 @@ def make_regions(rdict, window=1e6):
             wname = "W{:05d}".format(i)
             ref[wname] = w
         ret[refname] = ref
-        print(refname, "has", len(ref), "windows")
     return ret
 
 
@@ -56,12 +55,11 @@ def make_chroms(rdict):
                 scafs.append(cname)
         ref["scaffolds"] = scafs
         ret[refname] = ref
-        print(refname, "has", len(ref), "chromosome sets")
     return ret
 
 
 def _iter_metadata():
-    with open("../metadata/clean_metadata.csv") as fh:
+    with open("../metadata/seq-metadata.csv") as fh:
         for samp in csv.DictReader(fh):
             yield samp
 
@@ -81,12 +79,13 @@ def make_runlib2samp():
     return dict(rl2s), dict(s2rl)
 
 
-def make_samplesets():
+def make_samplesets(sets):
     ssets = defaultdict(list)
     everything = set()
     for run in _iter_metadata():
-        ssets[run["series"]].append(run["sample"])
-        ssets[run["species"]].append(run["sample"])
+        for sset in sets:
+            if run[sset].upper().startswith('Y'):
+                ssets[sset].append(run["sample"])
         everything.add(run["sample"])
-    ssets["everything"] = everything
+    ssets["all_samples"] = everything
     return {n: list(sorted(set(s))) for n, s in ssets.items()}

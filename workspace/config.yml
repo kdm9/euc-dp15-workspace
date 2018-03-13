@@ -3,6 +3,11 @@ qc:
   adapter2: CTGTCTCTTATACACATCTGACGCTGCCGACGANNNNNNNNGTGTAGATCTCGGTGGTCGCCGTATCATT
   minqual: 25
 
+sample_sets:
+  - Project1
+  - Project2
+  - Oxley
+
 mapping:
   aligners:
     - ngm
@@ -32,7 +37,7 @@ varcall:
   aligners:
     - bwa
   callers:
-    - freebayes
+    #- freebayes
     - mpileup
   genomes:
     - grandisv2chl
@@ -40,13 +45,12 @@ varcall:
     - allsamples
   filters:
     default: >
-      -i 'INFO/MQ >= 10 &&
-          QUAL >= 10 &&
+      -i 'QUAL >= 10 &&
           ALT != "." &&
           INFO/DP >= 5 &&
           INFO/AN >= 3'
     strict: >
-      -i 'INFO/MQ >= 30 &&
+      -i 'INFO/MQ >= 0 &&
           QUAL >= 40 &&
           ALT != "." &&
           INFO/DP >= 10 &&
@@ -56,7 +60,7 @@ angsd:
   mindepth: 10
   maxdepth: 1000
   minmapq: 30
-  minq: 30
+  minq: 10
   snppval: 1e-3
   minind: 10
   minmaf: 0.02

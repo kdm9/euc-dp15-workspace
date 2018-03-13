@@ -1,21 +1,44 @@
-rule denovodist:
+import snkmk
+configfile: "config.yml"
+RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
+SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
+
+rule kwip:
+    input:
+        expand("data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
+                ksize=config["denovodist"]["ksize"],
+                sketchsize=config["denovodist"]["kwip_sketchsize"],
+                set=[s for s, v in SAMPLESETS.items() if len(v) >=3]),
+rule mash:
     input:
         expand("data/mash/k{ksize}-s{sketchsize}/{set}.dist",
                 ksize=config["denovodist"]["ksize"],
                 sketchsize=config["denovodist"]["mash_sketchsize"],
                 set=[s for s, v in SAMPLESETS.items() if len(v) >=3]),
-        expand("data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
-                ksize=config["denovodist"]["ksize"],
-                sketchsize=config["denovodist"]["kwip_sketchsize"],
-                set=[s for s, v in SAMPLESETS.items() if len(v) >=3]),
+
+rule all:
+    input:
+        rules.kwip.input,
+        rules.mash.input,
 
 #--------------------------------------------------------------------------------
 #-                               de novo distance                               -
 #--------------------------------------------------------------------------------
 
+rule samplefastq:
+    input:
+        lambda wc: ["data/reads/runs/{run}/{lib}.fastq.gz".format(
+                    run=r, lib=l) for r, l in RUNLIB2SAMP],
+    output: "data/reads/samples/{sample}.fastq.gz"
+    log: "data/log/samplefastq/{sample}.log"
+    threads: 1
+    shell:
+        "cat {input} > {output}"
+
 rule mashsketch:
     input:
-        "data/alignments/bwa/grandisv2chl/{sample}.bam",
+        lambda wc: expand("data/reads/samples/{sample}.fastq.gz",
+                          sample=SAMPLESETS[wc.set]),
     output:
         "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
     log:
@@ -31,72 +54,21 @@ rule mashsketch:
         " >{log} 2>&1"
 
 
-rule mashpaste:
-    input:
-        lambda wc: expand("data/reads/samples/{sample}.fastq.gz",
-                          sample=SAMPLESETS[wc.set]),
-    output:
-        "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
-    log:
-        "data/log/mash/sketch/k{ksize}-s{sketchsize}-{set}.log"
-    threads: 16
-    shell:
-        " mash sketch"
-        "   -k {wildcards.ksize}"
-        "   -s {wildcards.sketchsize}"
-        "   -p {threads}"
-        "   -o data/mash/k{wildcards.ksize}-s{wildcards.sketchsize}/{wildcards.set}"
-        "   {input}"
-        " >{log} 2>&1"
-
-
-rule mash:
+rule mashdist:
     input:
         "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
     output:
-        dist="data/mash/k{ksize}-s{sketchsize}/{set}.mashdist",
+        dist="data/mash/k{ksize}-s{sketchsize}/{set}.dist",
     log:
         "data/log/mash/dist/k{ksize}-s{sketchsize}-{set}.log"
     threads: 16
     shell:
         "mash dist"
         "   -p {threads}"
-        "   {input} {input}" # needs it twice
+        "   -t" # tabular format
+        "   {input} {input}" # needs input twice
         " >{output}"
         " 2>{log}"
-
-localrules: mashdist
-rule mashdist:
-    input:
-        "data/mash/k{ksize}-s{sketchsize}/{set}.mashdist"
-    output:
-        "data/mash/k{ksize}-s{sketchsize}/{set}.dist"
-    run:
-        from collections import defaultdict
-        from os.path import basename
-        def fname2id(fname):
-            fname = basename(fname)
-            exts = [".gz", ".fastq", ".fq"]
-            for ext in exts:
-                if fname.endswith(ext):
-                    fname = fname[:-len(ext)]
-            return fname
-
-        dists = defaultdict(dict)
-        with open(input[0]) as fh:
-            for line in fh:
-                dist = line.strip().split('\t')
-                id1 = fname2id(dist[0])
-                id2 = fname2id(dist[1])
-                dist = float(dist[2])
-                dists[id1][id2] = dist
-
-        with open(output[0], 'w') as ofile:
-            ids = [''] + list(sorted(dists.keys()))
-            print(*ids, sep='\t', file=ofile)
-            for id1, row in sorted(dists.items()):
-                rowdists = [it[1] for it in sorted(row.items())]
-                print(id1, *rowdists, sep='\t', file=ofile)
 
 rule countsketch:
     input:
@@ -122,7 +94,7 @@ rule countsketch:
         "   {input}"
         " >{log} 2>&1"
 
-rule kwip:
+rule kwipdist:
     input:
         lambda wc: expand("data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz",
                             ksize=wc.ksize, sketchsize=wc.sketchsize,
@@ -144,15 +116,16 @@ rule kwip:
 
 rule unique_kmers:
     input:
-        expand("data/reads/libraries/{run}.fastq.gz", run=LIB2SAMP),
+        lambda wc: expand("data/reads/samples/{sample}.fastq.gz",
+                          sample=SAMPLESETS[wc.set]),
     output:
-        "data/readstats/unique-kmers.tsv",
+        "data/readstats/unique-kmers/{set}.tsv",
     threads:
         16
     params:
-        kmersize=31,
+        kmersize=config["denovodist"]["ksize"],
     log:
-        "data/log/readstats/unique-kmers.log",
+        "data/log/readstats/unique-kmers/{set}.log",
     shell:
         "( kdm-unique-kmers.py"
         "    -t {threads}"

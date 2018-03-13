@@ -1,8 +1,8 @@
 #!/bin/bash
-#PBS -q normalbw
-#PBS -l ncpus=28
+#PBS -q normal
+#PBS -l ncpus=16
 #PBS -l walltime=48:00:00
-#PBS -l mem=100G
+#PBS -l mem=60G
 #PBS -l jobfs=400G
 #PBS -l other=gdata1
 #PBS -l wd
@@ -10,6 +10,7 @@
 #PBS -m abe
 #PBS -P xe2
 
+set -xeuo pipefail
 source /g/data1/xe2/.profile
 
 export TMPDIR=$PBS_JOBFS
