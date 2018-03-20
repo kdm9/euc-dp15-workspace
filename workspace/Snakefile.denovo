@@ -28,7 +28,7 @@ rule all:
 rule samplefastq:
     input:
         lambda wc: ["data/reads/runs/{run}/{lib}.fastq.gz".format(
-                    run=r, lib=l) for r, l in RUNLIB2SAMP],
+                    run=r, lib=l) for r, l in SAMP2RUNLIB[wc.sample]],
     output: "data/reads/samples/{sample}.fastq.gz"
     log: "data/log/samplefastq/{sample}.log"
     threads: 1
