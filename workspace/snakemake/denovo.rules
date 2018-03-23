@@ -1,49 +1,22 @@
-import snkmk
 configfile: "config.yml"
+import snkmk
 RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
 SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
+shell.prefix = "set -euo pipefail; "
 
-rule kwip:
-    input:
-        expand("data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
-                ksize=config["denovodist"]["ksize"],
-                sketchsize=config["denovodist"]["kwip_sketchsize"],
-                set=[s for s, v in SAMPLESETS.items() if len(v) >=3]),
-rule mash:
-    input:
-        expand("data/mash/k{ksize}-s{sketchsize}/{set}.dist",
-                ksize=config["denovodist"]["ksize"],
-                sketchsize=config["denovodist"]["mash_sketchsize"],
-                set=[s for s, v in SAMPLESETS.items() if len(v) >=3]),
-
-rule all:
-    input:
-        rules.kwip.input,
-        rules.mash.input,
-
-#--------------------------------------------------------------------------------
-#-                               de novo distance                               -
-#--------------------------------------------------------------------------------
-
-rule samplefastq:
-    input:
-        lambda wc: ["data/reads/runs/{run}/{lib}.fastq.gz".format(
-                    run=r, lib=l) for r, l in SAMP2RUNLIB[wc.sample]],
-    output: "data/reads/samples/{sample}.fastq.gz"
-    log: "data/log/samplefastq/{sample}.log"
-    threads: 1
-    shell:
-        "cat {input} > {output}"
+subworkflow reads:
+    workdir: ".."
+    snakefile: "reads.rules"
 
 rule mashsketch:
     input:
-        lambda wc: expand("data/reads/samples/{sample}.fastq.gz",
-                          sample=SAMPLESETS[wc.set]),
+        lambda wc: reads(expand("data/reads/samples/{sample}.fastq.gz",
+                          sample=SAMPLESETS[wc.set])),
     output:
         "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
     log:
         "data/log/mash/sketch/k{ksize}-s{sketchsize}-{set}.log"
-    threads: 16
+    threads: 32
     shell:
         " mash sketch"
         "   -k {wildcards.ksize}"
@@ -61,7 +34,7 @@ rule mashdist:
         dist="data/mash/k{ksize}-s{sketchsize}/{set}.dist",
     log:
         "data/log/mash/dist/k{ksize}-s{sketchsize}-{set}.log"
-    threads: 16
+    threads: 32
     shell:
         "mash dist"
         "   -p {threads}"
@@ -72,7 +45,7 @@ rule mashdist:
 
 rule countsketch:
     input:
-        "data/reads/samples/{sample}.fastq.gz",
+        reads("data/reads/samples/{sample}.fastq.gz"),
     output:
         ct="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz",
         info="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz.info",
@@ -133,4 +106,5 @@ rule unique_kmers:
         "    {input}"
         "    >{output}"
         " ) 2>{log}"
+
 

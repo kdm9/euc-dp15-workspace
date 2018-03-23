@@ -1,0 +1,117 @@
+configfile: "config.yml"
+import snkmk
+RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
+SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
+shell.prefix = "set -euo pipefail; "
+
+rule sradl:
+    output: "rawdata/sra/{lib}.sra",
+    log: "data/log/sradl/{lib}.log"
+    shell:
+        "wget -nv -c -O {output}"
+        "   https://sra-download.ncbi.nlm.nih.gov/srapub/{wildcards.lib}"
+        " >{log} 2>&1"
+
+rule sradump:
+    input: "rawdata/sra/{lib}.sra",
+    output:
+        r1="rawdata/runs/sra/{lib}_R1.fastq.gz",
+        r2="rawdata/runs/sra/{lib}_R2.fastq.gz",
+    threads: 1
+    log: "data/log/fastqdump/{lib}.log"
+    shell:
+        "( fastq-dump"
+        "   --split-spot"
+        "   --skip-technical"
+        "   --stdout"
+        "   --readids"
+        "   --defline-seq '@$sn/$ri'"
+        "   --defline-qual '+'"
+        "   {input}"
+        " | seqhax pairs"
+        "   -1 >(gzip -3 >{output.r1})"
+        "   -2 >(gzip -3 >{output.r2})"
+        "   -u /dev/stdout" # log any unpaired reads to stdout
+        "   /dev/stdin"
+        " ) >{log} 2>&1"
+
+#localrules: qcreads
+rule qcreads:
+    input:
+        r1="rawdata/runs/{run}/{lib}_R1.fastq.gz",
+        r2="rawdata/runs/{run}/{lib}_R2.fastq.gz",
+    output:
+        reads="data/reads/runs/{run}/{lib}.fastq.gz",
+    log:
+        log="data/log/adapterremoval/{run}/{lib}.log",
+        settings="data/stats/adapterremoval/{run}/{lib}.txt",
+    threads:
+        1
+    params:
+        adp1=config["qc"]["adapter1"],
+        adp2=config["qc"]["adapter2"],
+        minqual=config["qc"]["minqual"],
+    shell:
+        "( AdapterRemoval"
+        "   --file1 {input.r1}"
+        "   --file2 {input.r2}"
+        "   --adapter1 {params.adp1}"
+        "   --adapter2 {params.adp2}"
+        "   --combined-output"
+        "   --interleaved-output"
+        "   --trimns"
+        "   --trimqualities"
+        "   --trimwindows 10"
+        "   --minquality {params.minqual}"
+        "   --threads {threads}"
+        "   --settings {log.settings}"
+        "   --output1 /dev/stdout"
+        " | seqhax pairs"
+        "   -l 20"
+        "   -b >(gzip >{output.reads})"
+        "   /dev/stdin"
+        ") >{log.log} 2>&1"
+
+
+rule samplefastq:
+    input:
+        lambda wc: ["data/reads/runs/{run}/{lib}.fastq.gz".format(
+                    run=r, lib=l) for r, l in SAMP2RUNLIB[wc.sample]],
+    output: "data/reads/samples/{sample}.fastq.gz"
+    log: "data/log/samplefastq/{sample}.log"
+    threads: 1
+    shell:
+        "cat {input} > {output}"
+
+rule read_count_librun:
+    input:
+        ["data/reads/runs/{run}/{lib}.fastq.gz".format(run=run, lib=lib)
+		for run, lib in RUNLIB2SAMP],
+    output:
+        "data/readstats/readnum_librun.tsv",
+    threads:
+        32
+    log:
+        "data/log/readstats/seqhax-stats-librun.log",
+    shell:
+        "( seqhax stats"
+        "    -t {threads}"
+        "    {input}"
+        "    >{output}"
+        " ) 2>{log}"
+
+rule read_count_sample:
+    input:
+    	expand("data/reads/samples/{sample}.fastq.gz", sample=SAMP2RUNLIB),
+    output:
+        "data/readstats/readnum_samples.tsv",
+    threads:
+        32
+    log:
+        "data/log/readstats/seqhax-stats-sample.log",
+    shell:
+        "( seqhax stats"
+        "    -t {threads}"
+        "    {input}"
+        "    >{output}"
+        " ) 2>{log}"
