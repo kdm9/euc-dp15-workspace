@@ -4,6 +4,14 @@ RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
 SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
 shell.prefix = "set -euo pipefail; "
 
+wildcard_constraints:
+    run="[^/]+",
+    lib="[^/]+",
+    aligner="[^/]+",
+    sample="[^/]+",
+    ref="[^/]+",
+    type="[^/]+",
+
 subworkflow reads:
     workdir: ".."
     snakefile: "reads.rules"
@@ -114,8 +122,8 @@ rule mergebam_samp:
                             run=r, lib=l, aln=wc.aligner, ref=wc.ref)
 	                for r, l in SAMP2RUNLIB[wc.sample]]
     output:
-        bam="data/alignments/{aligner}/{ref}/{sample}.bam",
-        bai="data/alignments/{aligner}/{ref}/{sample}.bam.bai",
+        bam="data/alignments/{aligner}/{ref}/samples/{sample}.bam",
+        bai="data/alignments/{aligner}/{ref}/samples/{sample}.bam.bai",
     log:
         "data/log/mergesamplebam/{aligner}/{ref}/{sample}.log"
     threads: 1
@@ -131,7 +139,7 @@ rule mergebam_samp:
 localrules: bamlist
 rule bamlist:
     input:
-        lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam",
+        lambda wc: expand("data/alignments/{aligner}/{ref}/samples/{sample}.bam",
                           aligner=wc.aligner, ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
 
     priority: 2
@@ -146,7 +154,7 @@ rule bamlist:
 localrules: mergebam_set
 rule mergebam_set:
     input:
-        lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam",
+        lambda wc: expand("data/alignments/{aligner}/{ref}/samples/{sample}.bam",
                           aligner=wc.aligner, ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
 
     output:

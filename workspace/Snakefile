@@ -62,6 +62,53 @@ rule denovo:
         rules.mash.input,
 
 #######################################################################
+#                       Alignment to Reference                        #
+#######################################################################
+
+subworkflow align:
+    workdir: "."
+    snakefile: "snakemake/align.rules"
+
+rule align_librun:
+    input:
+        lambda wc: [align("data/alignments/{aln}/{ref}/byrun/{run}/{lib}.bam".
+                        format(run=r, lib=l, aln=a, ref=ref))
+                        for r, l in RUNLIB2SAMP
+                        for a in config["mapping"]["aligners"]
+                        for ref in config["mapping"]["refs"]],
+
+rule align_samp:
+    input:
+        align(expand("data/alignments/{aligner}/{ref}/samples/{sample}.bam",
+               ref=config["mapping"]["refs"],
+               aligner=config["mapping"]["aligners"],
+               sample=SAMP2RUNLIB)),
+
+rule align_sampset:
+    input:
+        rules.align_samp.input,
+        align(expand("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam",
+               ref=config["mapping"]["refs"],
+               aligner=config["mapping"]["aligners"],
+               sampleset=SAMPLESETS)),
+        align(expand("data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
+               ref=config["mapping"]["refs"],
+               aligner=config["mapping"]["aligners"],
+               sampleset=SAMPLESETS)),
+
+rule bamstats:
+    input:
+        align(expand("data/stats/{type}-{aligner}~{ref}.tsv",
+               aligner=config["mapping"]["aligners"],
+               ref=config["mapping"]["refs"],
+               type=["insertsize", "qualstat"])),
+
+rule align:
+   input:
+        rules.align_sampset.input,
+        rules.bamstats.input,
+
+#######################################################################
 #                              All rule                               #
 #######################################################################
 
@@ -70,3 +117,4 @@ rule all:
     input:
         rules.denovo.input,
         rules.reads.input,
+        rules.align.input,

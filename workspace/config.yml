@@ -10,9 +10,9 @@ sample_sets:
 
 mapping:
   aligners:
-    - ngm
     - bwa
-  # - stampy
+    #- ngm
+    #- stampy
   refs:
     - grandisv2chl
 
@@ -33,7 +33,7 @@ denovodist:
 
 varcall:
   theta_prior: 0.04 # based on mash
-  chunksize: 1000000 # Otherwise freebayes take way too long
+  chunksize: 1000000
   aligners:
     - bwa
   callers:
@@ -42,7 +42,8 @@ varcall:
   genomes:
     - grandisv2chl
   samplesets:
-    - allsamples
+    - Oxley
+    - Project1
   filters:
     default: >
       -i 'QUAL >= 10 &&
@@ -67,5 +68,5 @@ angsd:
   minMAD: 3 # Number of reads with minor allel
   glmethod: 2 # gatk
   aligners:
-    - ngm
+    - bwa
   genome: grandisv2chl
