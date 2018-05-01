@@ -109,6 +109,27 @@ rule align:
         rules.bamstats.input,
 
 #######################################################################
+#                           Variant Calling                           #
+#######################################################################
+
+subworkflow varcall:
+    workdir: "."
+    snakefile: "snakemake/varcall.rules"
+
+rule filtered_bcfs:
+    input:
+        varcall(expand("data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
+                       caller=config["varcall"]["callers"],
+                       aligner=config["varcall"]["aligners"],
+                       ref=config["varcall"]["refs"],
+                       sampleset=config["varcall"]["samplesets"],
+                       filter=config["varcall"]["filters"])),
+
+rule varcall:
+    input:
+        rules.filtered_bcfs.input
+
+#######################################################################
 #                              All rule                               #
 #######################################################################
 
@@ -118,3 +139,5 @@ rule all:
         rules.denovo.input,
         rules.reads.input,
         rules.align.input,
+        rules.varcall.input,
+

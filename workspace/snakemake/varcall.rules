@@ -1,27 +1,9 @@
-import snkmk
 configfile: "config.yml"
-VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
-CHROMOSOMES = snkmk.make_chroms(config["refs"])
+import snkmk
 RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
 SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
-
-rule all_samples_only:
-    input:
-        expand("data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
-               caller=config["varcall"]["callers"],
-               aligner=config["varcall"]["aligners"],
-               ref=config["varcall"]["genomes"],
-               sampleset="all_samples",
-               filter=config["varcall"]["filters"]),
-
-rule everything:
-    input:
-        expand("data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
-               caller=config["varcall"]["callers"],
-               aligner=config["varcall"]["aligners"],
-               ref=config["varcall"]["genomes"],
-               sampleset=SAMPLESETS,
-               filter=config["varcall"]["filters"]),
+shell.prefix = "set -euo pipefail; "
+VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
 
 
 rule freebayes:
@@ -56,7 +38,7 @@ rule freebayes:
 
 rule mpileup:
     input:
-        bams=lambda wc: expand("data/alignments/{aligner}/{ref}/{sample}.bam", aligner=wc.aligner,
+        bams=lambda wc: expand("data/alignments/{aligner}/{ref}/samples/{sample}.bam", aligner=wc.aligner,
                                ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
         bamlist="data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
         ref=lambda wc: config['refs'][wc.ref],
@@ -103,8 +85,8 @@ rule bcfmerge:
     threads: 2
     shell:
         "( bcftools concat"
-        "   --allow-overlaps"
-        "   --remove-duplicates"
+        #"   --allow-overlaps" # These two options make bcftools extremely slow, with no noticble difference
+        #"   --remove-duplicates"
         "   --threads {threads}"
         "   -O b"
         "   -o {output.bcf}"
