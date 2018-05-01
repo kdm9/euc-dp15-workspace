@@ -33,13 +33,13 @@ denovodist:
 
 varcall:
   theta_prior: 0.04 # based on mash
-  chunksize: 1000000
+  chunksize: 10000000
   aligners:
     - bwa
   callers:
     #- freebayes
     - mpileup
-  genomes:
+  refs:
     - grandisv2chl
   samplesets:
     - Oxley
