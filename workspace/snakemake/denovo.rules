@@ -16,7 +16,7 @@ rule mashsketch:
         "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
     log:
         "data/log/mash/sketch/k{ksize}-s{sketchsize}-{set}.log"
-    threads: 32
+    threads: 28
     shell:
         " mash sketch"
         "   -k {wildcards.ksize}"
@@ -34,7 +34,7 @@ rule mashdist:
         dist="data/mash/k{ksize}-s{sketchsize}/{set}.dist",
     log:
         "data/log/mash/dist/k{ksize}-s{sketchsize}-{set}.log"
-    threads: 32
+    threads: 28
     shell:
         "mash dist"
         "   -p {threads}"
