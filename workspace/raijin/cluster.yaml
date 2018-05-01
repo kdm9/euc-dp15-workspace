@@ -36,14 +36,16 @@ angsd_step1_split:
 countsketch:
   time: "4:00:00"
 
-kwip:
+kwipdist:
   time: '168:00:00'
 
 mashsketch:
   time: '12:00:00'
+  queue: normalbw
 
-mash:
+mashdist:
   time: '2:00:00'
+  queue: normalbw
 
 mpileup:
   time: '12:00:00'
