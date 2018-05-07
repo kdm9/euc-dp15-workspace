@@ -103,7 +103,7 @@ rule bcffilter:
         idx="data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.csi",
     log:
         "data/log/bcffilter/{caller}/{aligner}/{ref}/{sampleset}/{filter}.log"
-    threads: 2
+    threads: 1
     params:
         filtarg=lambda wc: config["varcall"]["filters"][wc.filter].replace('\n', ' ')
     shell:
@@ -114,5 +114,23 @@ rule bcffilter:
         "   -o {output.bcf}"
         "   {input.bcf}"
         " && bcftools index -f {output.bcf}"
+        " ) >{log} 2>&1"
+
+rule bcf2vcf:
+    input:
+        bcf="{path}.bcf",
+        idx="{path}.bcf.csi",
+    output:
+        vcf="{path}.vcf.gz",
+        idx="{path}.vcf.gz.csi",
+    log:
+        "data/log/bcf2vcf/{path}.log"
+    threads: 1
+    shell:
+        "( bcftools view"
+        "   -O v"
+        "   {input.bcf}"
+        " | bgzip > {output.vcf}"
+        " && bcftools index {output.vcf}"
         " ) >{log} 2>&1"
 

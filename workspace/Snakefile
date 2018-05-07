@@ -124,10 +124,19 @@ rule filtered_bcfs:
                        ref=config["varcall"]["refs"],
                        sampleset=config["varcall"]["samplesets"],
                        filter=config["varcall"]["filters"])),
+rule filtered_vcfs:
+    input:
+        varcall(expand("data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.vcf.gz",
+                       caller=config["varcall"]["callers"],
+                       aligner=config["varcall"]["aligners"],
+                       ref=config["varcall"]["refs"],
+                       sampleset=config["varcall"]["samplesets"],
+                       filter=config["varcall"]["filters"])),
 
 rule varcall:
     input:
-        rules.filtered_bcfs.input
+        rules.filtered_bcfs.input,
+        rules.filtered_vcfs.input,
 
 #######################################################################
 #                              All rule                               #

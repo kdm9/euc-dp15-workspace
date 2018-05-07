@@ -55,7 +55,8 @@ varcall:
           QUAL >= 40 &&
           ALT != "." &&
           INFO/DP >= 10 &&
-          ((INFO/AN / N_SAMPLES)*2) > 0.50' # presence rate, >1/2 non-missing
+          ((INFO/AN / N_SAMPLES)*2) > 0.50'
+    # Above is presence rate, >50%
 
 angsd:
   mindepth: 10
