@@ -1,14 +1,15 @@
 #!/bin/bash
 #PBS -q normalbw
 #PBS -l ncpus=28
-#PBS -l walltime=24:00:00
-#PBS -l mem=110G
+#PBS -l walltime=48:00:00
+#PBS -l mem=250G
 #PBS -l jobfs=1T
 #PBS -l other=gdata1
 #PBS -l wd
-#PBS -M kevin@kdmurray.id.au
+#PBS -M pbs@kdmurray.id.au
 #PBS -m abe
 #PBS -P xe2
+#PBS -N RUNEUCS
 
 set -xeuo pipefail
 source /g/data1/xe2/.profile
@@ -31,7 +32,7 @@ snakemake                                                       \
     --snakefile ${SNAKEFILE}                                    \
     -j ${PBS_NCPUS}                                             \
     --rerun-incomplete                                          \
-    --keep-going 						\
+    --keep-going 						                        \
     ${TARGET}                                                   \
     >>data/log/`date +%Y-%m-%d`_${PBS_JOBID}_snakemake.log 2>&1 \
 
