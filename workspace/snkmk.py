@@ -30,7 +30,7 @@ def make_regions(rdict, window=1e6):
             else:
                 for start in range(0, clen, window):
                     wlen = min(clen - start, window)
-                    windows.append(["{}:{}-{}".format(cname, start, start+wlen)])
+                    windows.append(["{}:{}-{}".format(cname, start+1, start+wlen)])
         if len(curwin) > 0:
             windows.append(curwin)
 

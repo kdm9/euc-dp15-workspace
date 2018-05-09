@@ -5,10 +5,22 @@ SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
 shell.prefix = "set -euo pipefail; "
 VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
 
+wildcard_constraints:
+    run="[^/]+",
+    lib="[^/]+",
+    aligner="[^/]+",
+    sample="[^/]+",
+    ref="[^/]+",
+    type="[^/]+",
+
+subworkflow align:
+    workdir: ".."
+    snakefile: "align.rules"
+
 
 rule freebayes:
     input:
-        bam="data/alignments/{aligner}/{ref}/sets/{sampleset}.bam",
+        bam=align("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam"),
         ref=lambda wc: config['refs'][wc.ref],
     output:
         bcf=temp("data/variants/raw_split/freebayes/{aligner}/{ref}/{sampleset}/{region}.bcf"),
@@ -31,16 +43,15 @@ rule freebayes:
         "   --fasta-reference {input.ref}"
         "   {input.bam}"
         " | bcftools view"
-        "   -O b"
-        "   -o {output.bcf}"
+        "   -O b  -o {output.bcf}"
         " && bcftools index -f {output.bcf}"
         " ) >{log} 2>&1"
 
 rule mpileup:
     input:
-        bams=lambda wc: expand("data/alignments/{aligner}/{ref}/samples/{sample}.bam", aligner=wc.aligner,
-                               ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
-        bamlist="data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
+        bams=lambda wc: align(expand("data/alignments/{aligner}/{ref}/samples/{sample}.bam", aligner=wc.aligner,
+                               ref=wc.ref, sample=SAMPLESETS[wc.sampleset])),
+        bamlist=align("data/bamlists/{aligner}/{ref}/{sampleset}.bamlist"),
         ref=lambda wc: config['refs'][wc.ref],
     output:
         bcf=temp("data/variants/raw_split/mpileup/{aligner}/{ref}/{sampleset}/{region}.bcf"),
@@ -94,10 +105,35 @@ rule bcfmerge:
         " && bcftools index -f {output.bcf}"
         " ) >{log} 2>&1"
 
-rule bcffilter:
+rule bcfnorm:
     input:
         bcf="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf",
         idx="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
+    output:
+        bcf="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf",
+        idx="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf.csi",
+    log:
+        "data/log/bcfnormalise/{caller}/{aligner}/{ref}/{sampleset}.log"
+    threads: 1
+    shell:
+        "( bcftools norm"
+        "   --rm-dup any"
+        "   --fasta-ref {input.ref}"
+        "   -O u"
+        "   {input.bcf}"
+        " | vt decompose_blocksub + -o -" # decompose MNP to multipe SNPs
+        " | bcftools norm" # second norm is to ensure that the decompose didn't lead to un-normed variants
+        "   --rm-dup any"
+        "   --fasta-ref {input.ref}"
+        "   --multiallelics +any" # Merge overlapping bi-allelics to one multi-allelic
+        "   -O b  -o {output.bcf}"
+        " && bcftools index -f {output.bcf}"
+        " ) >{log} 2>&1"
+
+rule bcffilter:
+    input:
+        bcf="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf",
+        idx="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf.csi",
     output:
         bcf="data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
         idx="data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.csi",
@@ -110,9 +146,6 @@ rule bcffilter:
         "( bcftools view"
         "   --threads {threads}"
         "   {params.filtarg}"
-        "   -O b"
-        "   -o {output.bcf}"
-        "   {input.bcf}"
         " && bcftools index -f {output.bcf}"
         " ) >{log} 2>&1"
 
