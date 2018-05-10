@@ -6,7 +6,7 @@ qc:
 sample_sets:
   - Project1
   - Project2
-  - Proj1PlusOxley
+  - Project1PlusOxley
   - Oxley
 
 mapping:
@@ -43,9 +43,9 @@ varcall:
   refs:
     - grandisv2chl
   samplesets:
-    - Oxley
-    - Project1
-    - Proj1PlusOxley
+    # - Oxley
+    # - Project1
+    - Project1PlusOxley
   filters:
     default: >
       -i 'QUAL >= 10 &&

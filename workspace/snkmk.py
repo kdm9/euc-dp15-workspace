@@ -89,7 +89,7 @@ def make_samplesets(sets):
         for sset in sets:
             if run[sset].upper().startswith('Y'):
                 ssets[sset].append(run["sample"])
-        if run["Sequenced"] == "Y":
+        if run["Include"] == "Y":
             everything.add(run["sample"])
     ssets["all_samples"] = everything
     return {n: list(sorted(set(s))) for n, s in ssets.items()}

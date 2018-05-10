@@ -88,7 +88,7 @@ rule read_count_librun:
         ["data/reads/runs/{run}/{lib}.fastq.gz".format(run=run, lib=lib)
 		for run, lib in RUNLIB2SAMP],
     output:
-        "data/readstats/readnum_librun.tsv",
+        "data/stats/reads/readnum_librun.tsv",
     threads:
         32
     log:
@@ -104,7 +104,7 @@ rule read_count_sample:
     input:
     	expand("data/reads/samples/{sample}.fastq.gz", sample=SAMP2RUNLIB),
     output:
-        "data/readstats/readnum_samples.tsv",
+        "data/stats/reads/readnum_samples.tsv",
     threads:
         32
     log:

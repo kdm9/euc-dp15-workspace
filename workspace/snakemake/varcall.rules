@@ -109,6 +109,7 @@ rule bcfnorm:
     input:
         bcf="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf",
         idx="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
+        ref=lambda wc: config['refs'][wc.ref],
     output:
         bcf="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf",
         idx="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf.csi",

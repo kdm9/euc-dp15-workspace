@@ -20,8 +20,8 @@ rule qc_runlib:
 
 rule read_stats:
     input:
-        reads("data/readstats/readnum_librun.tsv"),
-        reads("data/readstats/readnum_samples.tsv"),
+        reads("data/stats/reads/readnum_librun.tsv"),
+        reads("data/stats/reads/readnum_samples.tsv"),
 
 rule qc_samples:
     input:
