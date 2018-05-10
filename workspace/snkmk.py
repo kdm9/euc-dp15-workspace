@@ -72,7 +72,7 @@ def make_runlib2samp():
         if not run["library"] or run["library"].lower().startswith("blank"):
             # Skip blanks
             continue
-        if run["Sequenced"] != "Y":
+        if run["Include"] != "Y":
             # Remove non-sequenced ones
             continue
         rl = (run["run"], run["library"])

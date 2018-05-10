@@ -1,0 +1,61 @@
+---
+title: "Merge"
+author: "Kevin Murray"
+date: "10 May 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+devtools::install_github("kdmurray91/kdmRutil")
+library(kdmRutil)
+```
+
+# import source metadata
+
+```{r }
+samples = read_csv("source/all-sample-metadata.csv")
+libruns = read_csv("source/librun.csv") %>% 
+    mutate(run.lib = paste(run, library, sep="~"))
+lib2sample = read_csv("source/library2sample.csv")
+readstat = read_tsv("source/readnum_librun.tsv") %>% 
+    mutate(library = filepath2sample(filename))
+```
+
+# Generate sequencing metadata
+
+```{r}
+samples.proj = samples %>% 
+    select(ID, Project1, Project2, Oxley, Project1PlusOxley)
+seqmeta = libruns %>% 
+    left_join(lib2sample, by=c("library"="libname")) %>% 
+    left_join(samples.proj, by=c("sample"="ID")) %>% 
+    arrange()
+
+write.csv(seqmeta, "seq-metadata.csv", quote = T, row.names=F, na="")
+```
+
+
+# Generate sample metadata
+
+This includes per-sample read/base stats
+
+```{r}
+sampreadstat = readstat %>% 
+    left_join(lib2sample, by=c("library"="libname")) %>% 
+    group_by(sample) %>% 
+    summarise_if(is.numeric, sum)
+
+sampmeta = seqmeta %>% 
+    filter(Include=="Y") %>% 
+    group_by(sample) %>% 
+    summarise(num_runs=n()) %>% 
+    rename(ID=sample) %>% 
+    left_join(samples, by="ID") %>% 
+    left_join(sampreadstat, by=c("ID"="sample")) %>% 
+    arrange(SampleSet, ID)
+
+write.csv(sampmeta, "sample-metadata.csv", quote = T, row.names=F)
+```
+
