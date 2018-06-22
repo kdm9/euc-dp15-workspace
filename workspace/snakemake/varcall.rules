@@ -5,12 +5,14 @@ SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
 shell.prefix = "set -euo pipefail; "
 VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
 
-try:
-    assert(callable(pipe))
-    pipeortemp = pipe
-    pipeortemp = lambda x: x
-except (AssertionError, NameError) as e:
-    pipeortemp = temp
+# the code commented out here will enable pipes where available. This causes
+# issues on raijin and I've disabled this till it's fixed.
+#try:
+#    assert(callable(pipe))
+#    pipeortemp = pipe
+#except (AssertionError, NameError) as e:
+#    pipeortemp = temp
+pipeortemp = temp
 
 wildcard_constraints:
     run="[^/]+",
@@ -94,16 +96,15 @@ rule bcfnorm:
         "   -O u"
         "   {input.bcf}"
         " | vt decompose_blocksub + -o -" # decompose MNP to multipe SNPs
-        " | bcftools norm" # second norm is to ensure that the decompose didn't lead to un-normed variants
-        "   --rm-dup any"
-        "   --fasta-ref {input.ref}"
-        "   --multiallelics +any" # Merge overlapping bi-allelics to one multi-allelic
+        " | bcftools norm" # Split multi-alleics
+        "   --multiallelics -any"
         "   -O u  -o {output.bcf}"
         " ) >{log} 2>&1"
 
 rule bcffilter:
     input:
         bcf="data/variants/norm_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf",
+        ref=lambda wc: config['refs'][wc.ref],
     output:
         # Not a pipe! can't run all regions separately if this is a pipe into merge
         bcf=temp("data/variants/filter_split/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}/{region}.bcf"),
@@ -114,8 +115,13 @@ rule bcffilter:
     shell:
         "( bcftools view"
         "   {params.filtarg}"
-        "   -O u  -o {output.bcf}"
+        "   -O u"
         "   {input.bcf}"
+        " | bcftools norm" # We normalise here to re-join multi-allelic sites, after filtering with multi-allelics split
+        "   --rm-dup any"
+        "   --fasta-ref {input.ref}"
+        "   --multiallelics +any" # Split multi-alleic sites
+        "   -O u  -o {output.bcf}"
         " ) >{log} 2>&1"
 
 rule bcfmerge:
