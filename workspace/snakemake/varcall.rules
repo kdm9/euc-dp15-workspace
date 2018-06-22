@@ -43,7 +43,6 @@ rule freebayes:
         "   --min-mapping-quality 10"
         "   --min-base-quality 10"
         "   --use-mapping-quality"
-        "   --genotype-qualities"
         "   --region '{wildcards.region}'"
         "   --fasta-reference {input.ref}"
         "   {input.bam}"
