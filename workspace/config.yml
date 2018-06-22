@@ -33,18 +33,19 @@ denovodist:
   ksize: 21
 
 varcall:
-  theta_prior: 0.1 # approx 10% of sites vary
-  chunksize: 5000000
+  theta_prior: 0.1 # approx 10% of sites vary, it seems
+  chunksize: 100000
   aligners:
     - bwa
   callers:
-    #- freebayes
+    - freebayes
     - mpileup
   refs:
     - grandisv2chl
   samplesets:
     # - Oxley
-    # - Project1
+    #- Project1
+    - Project2
     - Project1PlusOxley
   filters:
     default: >
@@ -57,7 +58,8 @@ varcall:
           QUAL >= 40 &&
           ALT != "." &&
           INFO/DP >= 10 &&
-          ((INFO/AN / N_SAMPLES)*2) > 0.50'
+          ((INFO/AN / N_SAMPLES)*2) > 0.50 &&
+          MAF >= 0.02'
     # Above is presence rate, >50%
 
 angsd:

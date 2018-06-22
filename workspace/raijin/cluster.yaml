@@ -3,7 +3,7 @@ __default__:
   queue: normal
   time: '01:00:00'
   jobfs: 400G
-  name: "{rule}_{wildcards}"
+  name: "EUSMK_{rule}_{wildcards}"
 
 qcreads: # sometimes a local rule
   time: '0:30:00'
@@ -25,6 +25,10 @@ bwamem:
 
 mergebam:
   time: '4:00:00'
+
+mergebam_set:
+  time: '24:00:00'
+  mem: "16G"
 
 bcfmerge:
   time: '72:00:00'

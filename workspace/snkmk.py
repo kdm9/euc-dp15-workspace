@@ -10,7 +10,7 @@ def parsefai(fai):
             yield cname, clen
 
 
-def make_regions(rdict, window=1e6):
+def make_regions(rdict, window=1e6, base=1):
     window = int(window)
     ret = {}
     for refname, refpath in rdict.items():
@@ -19,26 +19,10 @@ def make_regions(rdict, window=1e6):
         curwin = []
         curwinlen = 0
         for cname, clen in parsefai(fai):
-            if clen < window:
-                curwinlen += clen
-                reg = "{}:1-{}".format(cname, clen)
-                curwin.append(reg)
-                if curwinlen > window:
-                    windows.append(curwin)
-                    curwin = []
-                    curwinlen = 0
-            else:
-                for start in range(0, clen, window):
-                    wlen = min(clen - start, window)
-                    windows.append(["{}:{}-{}".format(cname, start+1, start+wlen)])
-        if len(curwin) > 0:
-            windows.append(curwin)
-
-        ref = dict()
-        for i, w in enumerate(windows):
-            wname = "W{:05d}".format(i)
-            ref[wname] = w
-        ret[refname] = ref
+            for start in range(0, clen, window):
+                wlen = min(clen - start, window)
+                windows.append("{}:{:09d}-{:09d}".format(cname, start + base, start+wlen))
+        ret[refname] = windows
     return ret
 
 

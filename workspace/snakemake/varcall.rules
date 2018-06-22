@@ -5,6 +5,13 @@ SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
 shell.prefix = "set -euo pipefail; "
 VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
 
+try:
+    assert(callable(pipe))
+    pipeortemp = pipe
+    pipeortemp = lambda x: x
+except (AssertionError, NameError) as e:
+    pipeortemp = temp
+
 wildcard_constraints:
     run="[^/]+",
     lib="[^/]+",
@@ -23,13 +30,11 @@ rule freebayes:
         bam=align("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam"),
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        bcf=temp("data/variants/raw_split/freebayes/{aligner}/{ref}/{sampleset}/{region}.bcf"),
-        idx=temp("data/variants/raw_split/freebayes/{aligner}/{ref}/{sampleset}/{region}.bcf.csi"),
+        bcf=pipeortemp("data/variants/raw_split/freebayes/{aligner}/{ref}/{sampleset}/{region}.bcf"),
     log:
         "data/log/freebayes/{aligner}/{ref}/{sampleset}/{region}.log"
     threads: 1
     params:
-        region=lambda wc: "' --region '".join(VARCALL_REGIONS[wc.ref][wc.region]),
         theta=config["varcall"].get("theta_prior", 0.01),
     shell:
         "( freebayes"
@@ -39,83 +44,50 @@ rule freebayes:
         "   --min-base-quality 10"
         "   --use-mapping-quality"
         "   --genotype-qualities"
-        "   --region '{params.region}'"
+        "   --region '{wildcards.region}'"
         "   --fasta-reference {input.ref}"
         "   {input.bam}"
         " | bcftools view"
-        "   -O b  -o {output.bcf}"
-        " && bcftools index -f {output.bcf}"
+        "   -O u  -o {output.bcf}"
         " ) >{log} 2>&1"
 
 rule mpileup:
     input:
-        bams=lambda wc: align(expand("data/alignments/{aligner}/{ref}/samples/{sample}.bam", aligner=wc.aligner,
-                               ref=wc.ref, sample=SAMPLESETS[wc.sampleset])),
-        bamlist=align("data/bamlists/{aligner}/{ref}/{sampleset}.bamlist"),
+        bam=align("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam"),
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        bcf=temp("data/variants/raw_split/mpileup/{aligner}/{ref}/{sampleset}/{region}.bcf"),
-        idx=temp("data/variants/raw_split/mpileup/{aligner}/{ref}/{sampleset}/{region}.bcf.csi"),
+        bcf=pipeortemp("data/variants/raw_split/mpileup/{aligner}/{ref}/{sampleset}/{region}.bcf"),
     log:
         "data/log/mpileup/{aligner}/{ref}/{sampleset}/{region}.log"
     threads: 1
     params:
-        region=lambda wc: "' --region '".join(VARCALL_REGIONS[wc.ref][wc.region]),
-        targets=lambda wc: "' --targets '".join(VARCALL_REGIONS[wc.ref][wc.region]), # for bcftools
         theta=config["varcall"].get("theta_prior", 0.01),
     shell:
         "( samtools mpileup"
-        "   --output-tags DP,AD,ADF,ADR,SP,INFO/AD,INFO/ADF,INFO/ADR" #output everything
-        "   --region '{params.region}'"
+        "   --output-tags DP,AD,SP,INFO/AD" #output everything
+        "   --region '{wildcards.region}'"
         "   --fasta-ref {input.ref}"
-        "   --bam-list {input.bamlist}"
         "   --redo-BAQ"
         "   --BCF --uncompressed"
+        "   {input.bam}"
         " | bcftools call"
-        "   --targets '{params.targets}'" # might not be needed
+        "   --targets '{wildcards.region}'" # might not be needed
         "   --multiallelic-caller"
         "   --prior {params.theta}"
-        "   -O b"
+        "   -O u"
         "   -o {output.bcf}"
-        " && bcftools index -f {output.bcf}"
         " ) >{log} 2>&1"
 
-rule bcfmerge:
-    input:
-        bcf=lambda wc: expand("data/variants/raw_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf",
-                              caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset,
-                              region=sorted(VARCALL_REGIONS[wc.ref])),
-        idx=lambda wc: expand("data/variants/raw_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf.csi",
-                              caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset,
-                              region=sorted(VARCALL_REGIONS[wc.ref])),
-    output:
-        bcf="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf",
-        idx="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
-    log:
-        "data/log/mergebcf/{caller}/{aligner}/{ref}/{sampleset}.log"
-    threads: 2
-    shell:
-        "( bcftools concat"
-        #"   --allow-overlaps" # These two options make bcftools extremely slow, with no noticble difference
-        #"   --remove-duplicates"
-        "   --threads {threads}"
-        "   -O b"
-        "   -o {output.bcf}"
-        "   {input.bcf}"
-        " && bcftools index -f {output.bcf}"
-        " ) >{log} 2>&1"
 
 rule bcfnorm:
     input:
-        bcf="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf",
-        idx="data/variants/raw/{caller}/{aligner}/{ref}/{sampleset}.bcf.csi",
+        bcf="data/variants/raw_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf",
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        bcf="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf",
-        idx="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf.csi",
+        # Not a pipe! can't run multiple filters if a pipe
+        bcf=temp("data/variants/norm_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf"),
     log:
-        "data/log/bcfnormalise/{caller}/{aligner}/{ref}/{sampleset}.log"
-    threads: 1
+        "data/log/bcfnormalise/{caller}/{aligner}/{ref}/{sampleset}/{region}.log"
     shell:
         "( bcftools norm"
         "   --rm-dup any"
@@ -127,28 +99,44 @@ rule bcfnorm:
         "   --rm-dup any"
         "   --fasta-ref {input.ref}"
         "   --multiallelics +any" # Merge overlapping bi-allelics to one multi-allelic
-        "   -O b  -o {output.bcf}"
-        " && bcftools index -f {output.bcf}"
+        "   -O u  -o {output.bcf}"
         " ) >{log} 2>&1"
 
 rule bcffilter:
     input:
-        bcf="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf",
-        idx="data/variants/normalised/{caller}~{aligner}~{ref}~{sampleset}.bcf.csi",
+        bcf="data/variants/norm_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf",
     output:
-        bcf="data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
-        idx="data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.csi",
+        # Not a pipe! can't run all regions separately if this is a pipe into merge
+        bcf=temp("data/variants/filter_split/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}/{region}.bcf"),
     log:
-        "data/log/bcffilter/{caller}/{aligner}/{ref}/{sampleset}/{filter}.log"
-    threads: 1
+        "data/log/bcffilter/{caller}/{aligner}/{ref}/{sampleset}/{filter}/{region}.log"
     params:
         filtarg=lambda wc: config["varcall"]["filters"][wc.filter].replace('\n', ' ')
     shell:
         "( bcftools view"
-        "   --threads {threads}"
         "   {params.filtarg}"
-        " && bcftools index -f {output.bcf}"
+        "   -O u  -o {output.bcf}"
+        "   {input.bcf}"
         " ) >{log} 2>&1"
+
+rule bcfmerge:
+    input:
+        bcf=lambda wc: expand("data/variants/filter_split/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}/{region}.bcf",
+                              caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset, filter=wc.filter,
+                              region=sorted(VARCALL_REGIONS[wc.ref])),
+    output:
+        bcf="data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
+    log:
+        "data/log/mergebcf/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}.log"
+    threads: 28
+    shell:
+        "( bcftools concat"
+        "   --threads {threads}"
+        "   -O b"
+        "   -o {output.bcf}"
+        "   {input.bcf}"
+        " ) >{log} 2>&1"
+
 
 rule bcf2vcf:
     input:
@@ -159,12 +147,20 @@ rule bcf2vcf:
         idx="{path}.vcf.gz.csi",
     log:
         "data/log/bcf2vcf/{path}.log"
-    threads: 1
+    threads: 28
     shell:
         "( bcftools view"
-        "   -O v"
         "   {input.bcf}"
-        " | bgzip > {output.vcf}"
-        " && bcftools index {output.vcf}"
+        "   -O z"
+        "   --threads {threads}"
+        "   -o {output.vcf}"
+        " && bcftools index -f {output.vcf}"
         " ) >{log} 2>&1"
 
+rule bcfidx:
+    input:
+        "{path}.bcf"
+    output:
+        "{path}.bcf.csi"
+    shell:
+        "bcftools index -f {input}"

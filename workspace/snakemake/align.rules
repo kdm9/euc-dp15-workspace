@@ -27,7 +27,7 @@ rule ngmap:
     log:
         "data/log/ngm/{ref}/{run}/{lib}.log"
     threads:
-        4
+        8
     params:
         sample=lambda wc: RUNLIB2SAMP.get((wc.run, wc.lib), "{}~{}".format(wc.run, wc.lib)),
     shell:
@@ -59,7 +59,7 @@ rule bwamem:
     log:
         "data/log/bwa/{ref}/{run}/{lib}.log"
     threads:
-        4
+        8
     params:
         sample=lambda wc: RUNLIB2SAMP.get((wc.run, wc.lib), "{}~{}".format(wc.run, wc.lib)),
     shell:
@@ -90,7 +90,6 @@ rule stampy:
         "data/log/stampy/{ref}/{run}/{lib}.log"
     threads:
         16
-    priority: 4
     params:
         sample=lambda wc: RUNLIB2SAMP.get((wc.run, wc.lib), "{}~{}".format(wc.run, wc.lib)),
     shell:
@@ -115,7 +114,6 @@ rule stampy:
         " ; rm -rf /dev/shm/stampyref_{wildcards.run}_{wildcards.lib}"
         " ) >{log} 2>&1"
 
-localrules: mergebam_samp
 rule mergebam_samp:
     input:
         lambda wc: ["data/alignments/{aln}/{ref}/byrun/{run}/{lib}.bam".format(
@@ -126,7 +124,7 @@ rule mergebam_samp:
         bai="data/alignments/{aligner}/{ref}/samples/{sample}.bam.bai",
     log:
         "data/log/mergesamplebam/{aligner}/{ref}/{sample}.log"
-    threads: 1
+    threads: 8
     shell:
         "( samtools merge"
         "   -@ {threads}"
@@ -142,7 +140,6 @@ rule bamlist:
         lambda wc: expand("data/alignments/{aligner}/{ref}/samples/{sample}.bam",
                           aligner=wc.aligner, ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
 
-    priority: 2
     output:
         "data/bamlists/{aligner}/{ref}/{sampleset}.bamlist",
     run:
@@ -151,7 +148,6 @@ rule bamlist:
                 print(s, file=fh)
 
 
-localrules: mergebam_set
 rule mergebam_set:
     input:
         lambda wc: expand("data/alignments/{aligner}/{ref}/samples/{sample}.bam",
@@ -162,7 +158,7 @@ rule mergebam_set:
         bai="data/alignments/{aligner}/{ref}/sets/{sampleset}.bam.bai",
     log:
         "data/log/mergesetbam/{aligner}/{ref}/{sampleset}.log"
-    threads: 1
+    threads: 8
     shell:
         "( samtools merge"
         "   -@ {threads}"
@@ -184,7 +180,6 @@ rule mergestats:
         "cat {input} > {output}"
 
 
-localrules: bamstats_insertionsize
 rule bamstats_insertionsize:
     input:
         "data/alignments/{aligner}/{ref}/byrun/{run}/{lib}.bam",

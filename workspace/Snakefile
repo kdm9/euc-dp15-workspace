@@ -116,9 +116,18 @@ subworkflow varcall:
     workdir: "."
     snakefile: "snakemake/varcall.rules"
 
+rule mpileup_filtered_vcfs:
+    input:
+        varcall(expand("data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.vcf.gz",
+                       caller="mpileup",
+                       aligner=config["varcall"]["aligners"],
+                       ref=config["varcall"]["refs"],
+                       sampleset=config["varcall"]["samplesets"],
+                       filter=config["varcall"]["filters"])),
+
 rule filtered_bcfs:
     input:
-        varcall(expand("data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
+        varcall(expand("data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
                        caller=config["varcall"]["callers"],
                        aligner=config["varcall"]["aligners"],
                        ref=config["varcall"]["refs"],
@@ -126,7 +135,7 @@ rule filtered_bcfs:
                        filter=config["varcall"]["filters"])),
 rule filtered_vcfs:
     input:
-        varcall(expand("data/variants/filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.vcf.gz",
+        varcall(expand("data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.vcf.gz",
                        caller=config["varcall"]["callers"],
                        aligner=config["varcall"]["aligners"],
                        ref=config["varcall"]["refs"],
