@@ -32,9 +32,9 @@ rule freebayes:
         bam=align("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam"),
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        bcf=pipeortemp("data/variants/raw_split/freebayes/{aligner}/{ref}/{sampleset}/{region}.bcf"),
+        bcf=pipeortemp("data/variants/raw_split/freebayes~{aligner}~{ref}~{sampleset}/{region}.bcf"),
     log:
-        "data/log/freebayes/{aligner}/{ref}/{sampleset}/{region}.log"
+        "data/log/freebayes/{aligner}~{ref}~{sampleset}/{region}.log"
     threads: 1
     params:
         theta=config["varcall"].get("theta_prior", 0.01),
@@ -57,9 +57,9 @@ rule mpileup:
         bam=align("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam"),
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        bcf=pipeortemp("data/variants/raw_split/mpileup/{aligner}/{ref}/{sampleset}/{region}.bcf"),
+        bcf=pipeortemp("data/variants/raw_split/mpileup~{aligner}~{ref}~{sampleset}/{region}.bcf"),
     log:
-        "data/log/mpileup/{aligner}/{ref}/{sampleset}/{region}.log"
+        "data/log/mpileup/{aligner}~{ref}~{sampleset}/{region}.log"
     threads: 1
     params:
         theta=config["varcall"].get("theta_prior", 0.01),
@@ -82,13 +82,13 @@ rule mpileup:
 
 rule bcfnorm:
     input:
-        bcf="data/variants/raw_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf",
+        bcf="data/variants/raw_split/{caller}~{aligner}~{ref}~{sampleset}/{region}.bcf",
         ref=lambda wc: config['refs'][wc.ref],
     output:
         # Not a pipe! can't run multiple filters if a pipe
-        bcf=temp("data/variants/norm_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf"),
+        bcf=temp("data/variants/norm_split/{caller}~{aligner}~{ref}~{sampleset}/{region}.bcf"),
     log:
-        "data/log/bcfnormalise/{caller}/{aligner}/{ref}/{sampleset}/{region}.log"
+        "data/log/bcfnormalise/{caller}~{aligner}~{ref}~{sampleset}/{region}.log"
     shell:
         "( bcftools norm"
         "   --rm-dup any"
@@ -103,13 +103,13 @@ rule bcfnorm:
 
 rule bcffilter:
     input:
-        bcf="data/variants/norm_split/{caller}/{aligner}/{ref}/{sampleset}/{region}.bcf",
+        bcf="data/variants/norm_split/{caller}~{aligner}~{ref}~{sampleset}/{region}.bcf",
         ref=lambda wc: config['refs'][wc.ref],
     output:
         # Not a pipe! can't run all regions separately if this is a pipe into merge
         bcf=temp("data/variants/filter_split/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}/{region}.bcf"),
     log:
-        "data/log/bcffilter/{caller}/{aligner}/{ref}/{sampleset}/{filter}/{region}.log"
+        "data/log/bcffilter/{caller}~{aligner}~{ref}~{sampleset}/{filter}/{region}.log"
     params:
         filtarg=lambda wc: config["varcall"]["filters"][wc.filter].replace('\n', ' ')
     shell:
@@ -124,32 +124,44 @@ rule bcffilter:
         "   -O u  -o {output.bcf}"
         " ) >{log} 2>&1"
 
-rule bcfmerge:
+localrules: bcfmerge_fofn
+rule bcfmerge_fofn:
     input:
         bcf=lambda wc: expand("data/variants/filter_split/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}/{region}.bcf",
                               caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset, filter=wc.filter,
                               region=sorted(VARCALL_REGIONS[wc.ref])),
     output:
+        fofn=temp("data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.INPUT_FOFN"),
+    run:
+        with open(output[0], "w") as fh:
+            for s in input:
+                print(s, file=fh)
+
+rule bcfmerge:
+    input:
+        bcf=lambda wc: expand("data/variants/filter_split/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}/{region}.bcf",
+                              caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset, filter=wc.filter,
+                              region=sorted(VARCALL_REGIONS[wc.ref])),
+        fofn="data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.INPUT_FOFN",
+    output:
         bcf="data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
     log:
         "data/log/mergebcf/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}.log"
-    threads: 28
+    threads: 8
     shell:
         "( bcftools concat"
         "   --threads {threads}"
         "   -O b"
         "   -o {output.bcf}"
-        "   {input.bcf}"
+        "   --file-list {input.fofn}"
         " ) >{log} 2>&1"
 
 
 rule bcf2vcf:
     input:
         bcf="{path}.bcf",
-        idx="{path}.bcf.csi",
     output:
         vcf="{path}.vcf.gz",
-        idx="{path}.vcf.gz.csi",
     log:
         "data/log/bcf2vcf/{path}.log"
     threads: 28
@@ -159,7 +171,6 @@ rule bcf2vcf:
         "   -O z"
         "   --threads {threads}"
         "   -o {output.vcf}"
-        " && bcftools index -f {output.vcf}"
         " ) >{log} 2>&1"
 
 rule bcfidx:
