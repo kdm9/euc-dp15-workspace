@@ -1,0 +1,25 @@
+#!/bin/bash
+#PBS -P xe2
+#PBS -q express
+#PBS -l ncpus=8
+#PBS -l walltime=24:00:00
+#PBS -l other=gdata1
+#PBS -l mem=1G
+#PBS -l jobfs=1T
+#PBS -l wd
+#PBS -N subset
+#PBS -m abe
+#PBS -M pbs@kdmurray.id.au
+
+set -euo pipefail
+module load parallel zlib
+NSITES=${NSITES:-5000000}
+TOTALNSITES=$(cat data/angsd/Project2.beagle.nsites)
+IN=data/angsd/Project2.beagle.gz
+OUT=data/angsd/subsetsV2/Project2/
+mkdir -p $OUT
+
+
+zcat $IN | eval tee $(for i in $(seq ${REPFROM} ${REPTO} |xargs -l1 printf "%03d\n"); do echo ">(randomlines -H 1 -S $TOTALNSITES -n $NSITES -e $i /dev/fd/0 | gzip > $OUT/Project2.subset${NSITES}.rep${i}.beagle.gz)"; done) >/dev/null
+
+#| pv -r -b -s $TOTALNSITES -l -i 10 -n 2>SUBSET_LOG_${REPFROM}-${REPTO}.log 

@@ -1,0 +1,26 @@
+#!/bin/bash
+#PBS -P xe2
+#PBS -q expressbw
+#PBS -l ncpus=280
+#PBS -l walltime=5:00:00
+#PBS -l other=gdata1
+#PBS -l mem=1260G
+#PBS -l wd
+#PBS -N angsd-geno
+#PBS -m abe
+#PBS -M pbs@kdmurray.id.au
+
+module load pbs python/2.7.11 angsd
+
+set -u
+REF=data/ref/Egrandis-v2-plus-chloro.fasta
+for PROJ in Project2 Project1PlusOxley
+do
+OUTDIR=data/angsd/$PROJ
+BAMLIST=data/bamlists/bwa/grandisv2chl/$PROJ.bamlist
+mkdir -p $OUTDIR
+regionparallel \
+    -r $REF \
+    -f $OUTDIR/donelist.txt \
+    "module load angsd; cd $PWD; (angsd -out $OUTDIR/{region}  -bam $BAMLIST -ref $REF  -anc $REF  -r {region} -GL 2 -doGlf 2 -doGeno -doMajorMinor 1 -nThreads 1 -SNP_pval 1e-4 -doMaf 2 -doPost 1  -minMaf 0.05 -minInd 50 && zcat $OUTDIR/{region}.beagle.gz | tee $OUTDIR/{region}.beagle | wc -l > $OUTDIR/{region}.beagle.nsites ) > $OUTDIR/{region}.log 2>&1"
+done

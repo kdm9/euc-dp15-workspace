@@ -1,0 +1,20 @@
+#!/bin/bash
+#PBS -P xe2
+#PBS -q normalbw
+#PBS -l ncpus=14
+#PBS -l walltime=2:00:00
+#PBS -l other=gdata1
+#PBS -l mem=110G
+#PBS -l wd
+#PBS -N pcangsd
+#PBS -m abe
+#PBS -M pbs@kdmurray.id.au
+
+module purge
+module load pbs
+. miniconda2/etc/profile.d/conda.sh
+conda activate ./conda-env/
+set -ueo pipefail
+
+mkdir -p data/pcangsd/Project2/subset5000000/
+pcangsd -threads ${PBS_NCPUS:-4} -o data/pcangsd/Project2/subset5000000/${REP} -beagle data/angsd/subsetsV2/Project2/Project2.subset5000000.rep${REP}.beagle.gz
