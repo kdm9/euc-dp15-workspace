@@ -12,6 +12,8 @@ VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["c
 #    pipeortemp = pipe
 #except (AssertionError, NameError) as e:
 #    pipeortemp = temp
+# disable temp too for now
+temp = lambda x: x
 pipeortemp = temp
 
 wildcard_constraints:
@@ -35,19 +37,21 @@ rule freebayes:
         bcf=pipeortemp("data/variants/raw_split/freebayes~{aligner}~{ref}~{sampleset}/{region}.bcf"),
     log:
         "data/log/freebayes/{aligner}~{ref}~{sampleset}/{region}.log"
-    threads: 1
     params:
         theta=config["varcall"].get("theta_prior", 0.01),
     shell:
-        "( freebayes"
+        "( samtools view"                   # some versions of freebayes don't seek to region
+        "   --regions '{wildcards.region}'" # also region format is zero-based in freebayes
+        "   -Ou"                            # so we extract the correct region from the BAM
+        "    {input.bam}"
+        " | freebayes"
         "   --theta {params.theta}"
         "   --use-reference-allele"
         "   --min-mapping-quality 10"
         "   --min-base-quality 10"
         "   --use-mapping-quality"
-        "   --region '{wildcards.region}'"
         "   --fasta-reference {input.ref}"
-        "   {input.bam}"
+        "   --stdin"
         " | bcftools view"
         "   -O u  -o {output.bcf}"
         " ) >{log} 2>&1"
@@ -57,10 +61,10 @@ rule mpileup:
         bam=align("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam"),
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        bcf=pipeortemp("data/variants/raw_split/mpileup~{aligner}~{ref}~{sampleset}/{region}.bcf"),
+        #bcf=pipeortemp("data/variants/raw_split/mpileup~{aligner}~{ref}~{sampleset}/{region}.bcf"),
+        bcf=("data/variants/raw_split/mpileup~{aligner}~{ref}~{sampleset}/{region}.bcf"),
     log:
         "data/log/mpileup/{aligner}~{ref}~{sampleset}/{region}.log"
-    threads: 1
     params:
         theta=config["varcall"].get("theta_prior", 0.01),
     shell:
@@ -91,13 +95,13 @@ rule bcfnorm:
         "data/log/bcfnormalise/{caller}~{aligner}~{ref}~{sampleset}/{region}.log"
     shell:
         "( bcftools norm"
-        "   --rm-dup any"
         "   --fasta-ref {input.ref}"
         "   -O u"
         "   {input.bcf}"
         " | vt decompose_blocksub + -o -" # decompose MNP to multipe SNPs
         " | bcftools norm" # Split multi-alleics
-        "   --multiallelics -any"
+        "   --do-not-normalize"
+        "   --multiallelics -snps"
         "   -O u  -o {output.bcf}"
         " ) >{log} 2>&1"
 
@@ -118,9 +122,9 @@ rule bcffilter:
         "   -O u"
         "   {input.bcf}"
         " | bcftools norm" # We normalise here to re-join multi-allelic sites, after filtering with multi-allelics split
-        "   --rm-dup any"
         "   --fasta-ref {input.ref}"
-        "   --multiallelics +any" # Split multi-alleic sites
+        "   --do-not-normalize"
+        "   --multiallelics +snps" # Split multi-alleic sites
         "   -O u  -o {output.bcf}"
         " ) >{log} 2>&1"
 
@@ -131,7 +135,7 @@ rule bcfmerge_fofn:
                               caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset, filter=wc.filter,
                               region=sorted(VARCALL_REGIONS[wc.ref])),
     output:
-        fofn=temp("data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.INPUT_FOFN"),
+        fofn=temp("data/variants/final/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.INPUT_FOFN"),
     run:
         with open(output[0], "w") as fh:
             for s in input:
@@ -142,9 +146,9 @@ rule bcfmerge:
         bcf=lambda wc: expand("data/variants/filter_split/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}/{region}.bcf",
                               caller=wc.caller, aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset, filter=wc.filter,
                               region=sorted(VARCALL_REGIONS[wc.ref])),
-        fofn="data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.INPUT_FOFN",
+        fofn="data/variants/final/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf.INPUT_FOFN",
     output:
-        bcf="data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
+        bcf="data/variants/final/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
     log:
         "data/log/mergebcf/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}.log"
     threads: 8
@@ -164,7 +168,7 @@ rule bcf2vcf:
         vcf="{path}.vcf.gz",
     log:
         "data/log/bcf2vcf/{path}.log"
-    threads: 28
+    threads: 8
     shell:
         "( bcftools view"
         "   {input.bcf}"
@@ -173,10 +177,21 @@ rule bcf2vcf:
         "   -o {output.vcf}"
         " ) >{log} 2>&1"
 
-rule bcfidx:
+rule variantidx:
     input:
-        "{path}.bcf"
+        "{path}"
     output:
-        "{path}.bcf.csi"
+        "{path}.csi"
+    priority: 2
     shell:
         "bcftools index -f {input}"
+
+rule stats:
+    input:
+        "data/variants/{path}"
+    output:
+        "data/stats/variants/{path}.varstats"
+    shell:
+        "bcftools stats -s - -d 0,1000,2 --threads {threads} {input} >{output}"
+
+

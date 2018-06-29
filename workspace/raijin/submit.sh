@@ -21,12 +21,12 @@ SNAKEFILE=${SNAKEFILE:-Snakefile}
 
 QSUB="qsub -q {cluster.queue} -l ncpus={threads} -l jobfs={cluster.jobfs}"
 QSUB="$QSUB -l walltime={cluster.time} -l mem={cluster.mem} -N {cluster.name}"
-QSUB="$QSUB -l wd -o $logdir -e $logdir -P xe2"
+QSUB="$QSUB -l wd -o $logdir -e $logdir -P {cluster.project}"
 
 snakemake --unlock
 
 snakemake                                                 \
-    -j 1000                                               \
+    -j 100                                                \
     --cluster-config raijin/cluster.yaml                  \
     --local-cores ${PBS_NCPUS:-1}                         \
     --js raijin/jobscript.sh                              \

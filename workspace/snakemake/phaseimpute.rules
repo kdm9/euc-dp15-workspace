@@ -1,0 +1,54 @@
+configfile: "config.yml"
+import snkmk
+RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
+SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
+shell.prefix = "set -euo pipefail; "
+BEAGLE_REGIONS = snkmk.make_chroms(config["refs"])
+
+try:
+    assert(callable(pipe))
+    pipeortemp = pipe
+except (AssertionError, NameError) as e:
+    pipeortemp = temp
+
+wildcard_constraints:
+    run="[^/]+",
+    lib="[^/]+",
+    aligner="[^/]+",
+    sample="[^/]+",
+    ref="[^/]+",
+    type="[^/]+",
+
+subworkflow varcall:
+    workdir: ".."
+    snakefile: "varcall.rules"
+
+
+rule all:
+    input:
+        expand("data/phaseimpute/beagle_split/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}/{region}.vcf.gz",
+               caller="mpileup",
+               aligner="bwa",
+               ref="grandisv2chl",
+               sampleset="Project1PlusOxley",
+               filter="default",
+               region=sorted(BEAGLE_REGIONS["grandisv2chl"])),
+rule beagle4:
+    input:
+        vcf=varcall("data/variants/final/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.vcf.gz"),
+    output:
+        vcf=temp("data/phaseimpute/beagle_split/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}/{region}.vcf.gz"),
+    log:
+        "data/log/beagle4/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}/{region}.log"
+    threads: 8
+    shell:
+        "( beagle"
+        "   gt={input.vcf}"
+        "   out=$(dirname {output.vcf})/{wildcards.region}"
+        "   chrom='{wildcards.region}'"
+        "   ibd=true"
+        "   nthreads={threads}"
+        "   lowmem=true"
+        "   window=10001"
+        "   ibdcm=0.05"
+        " ) >{log} 2>&1"

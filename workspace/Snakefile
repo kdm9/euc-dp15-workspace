@@ -48,18 +48,26 @@ rule kwip:
         denovo(expand("data/kwip/k{ksize}-s{sketchsize}/{set}.dist",
                 ksize=config["denovodist"]["ksize"],
                 sketchsize=config["denovodist"]["kwip_sketchsize"],
-                set=[s for s, v in SAMPLESETS.items() if len(v) >=3])),
+                set=config["denovodist"]["kwip_sets"])),
+rule sourmash:
+    input:
+        denovo(expand("data/sourmash/k{ksize}-s{sketchsize}/{set}.dist",
+                ksize=config["denovodist"]["ksize"],
+                sketchsize=config["denovodist"]["sourmash_sketchsize"],
+                set=config["denovodist"]["sourmash_sets"])),
+
 rule mash:
     input:
         denovo(expand("data/mash/k{ksize}-s{sketchsize}/{set}.dist",
                 ksize=config["denovodist"]["ksize"],
                 sketchsize=config["denovodist"]["mash_sketchsize"],
-                set=[s for s, v in SAMPLESETS.items() if len(v) >=3])),
+                set=config["denovodist"]["mash_sets"])),
 
 rule denovo:
     input:
         rules.kwip.input,
         rules.mash.input,
+        rules.sourmash.input,
 
 #######################################################################
 #                       Alignment to Reference                        #
@@ -116,36 +124,30 @@ subworkflow varcall:
     workdir: "."
     snakefile: "snakemake/varcall.rules"
 
-rule mpileup_filtered_vcfs:
-    input:
-        varcall(expand("data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.vcf.gz",
-                       caller="mpileup",
-                       aligner=config["varcall"]["aligners"],
-                       ref=config["varcall"]["refs"],
-                       sampleset=config["varcall"]["samplesets"],
-                       filter=config["varcall"]["filters"])),
 
-rule filtered_bcfs:
+rule filtered_variants:
     input:
-        varcall(expand("data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.bcf",
+        varcall(expand("data/variants/final/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.{ext}",
+                       ext=["bcf", "bcf.csi", "vcf.gz", "vcf.gz.csi"],
                        caller=config["varcall"]["callers"],
                        aligner=config["varcall"]["aligners"],
                        ref=config["varcall"]["refs"],
                        sampleset=config["varcall"]["samplesets"],
                        filter=config["varcall"]["filters"])),
-rule filtered_vcfs:
+rule dbgvc:
     input:
-        varcall(expand("data/variants/merged_filtered/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.vcf.gz",
+        varcall(expand("data/variants/filter_split/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}/{region}.{ext}",
+                       region="Chr02:1000000-1010000",
+                       ext=["bcf"],
                        caller=config["varcall"]["callers"],
                        aligner=config["varcall"]["aligners"],
                        ref=config["varcall"]["refs"],
-                       sampleset=config["varcall"]["samplesets"],
+                       sampleset="Project1PlusOxley",
                        filter=config["varcall"]["filters"])),
 
 rule varcall:
     input:
-        rules.filtered_bcfs.input,
-        rules.filtered_vcfs.input,
+        rules.filtered_variants.input,
 
 #######################################################################
 #                              All rule                               #

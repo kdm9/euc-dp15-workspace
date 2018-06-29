@@ -37,7 +37,8 @@ def make_chroms(rdict):
                 ref[cname] = [cname]
             else:
                 scafs.append(cname)
-        ref["scaffolds"] = scafs
+        if scafs:
+            ref["scaffolds"] = scafs
         ret[refname] = ref
     return ret
 

@@ -1,0 +1,65 @@
+import snkmk
+configfile: "config.yml"
+RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
+SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
+VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
+
+wildcard_constraints:
+    run="[^/]+",
+    lib="[^/]+",
+    aligner="[^/]+",
+    sample="[^/]+",
+    ref="[^/]+",
+    type="[^/]+",
+
+subworkflow align:
+    workdir: ".."
+    snakefile: "align.rules"
+
+
+rule all:
+    input:
+        "data/gatk/combinedgvcf/bwa/grandisv2chl/Project1PlusOxley.gvcf.gz",
+        "data/gatk/combinedgvcf/bwa/grandisv2chl/Project2.gvcf.gz",
+
+rule gatk4_combinegvcf:
+    input:
+        gvcf=lambda wc: expand("data/gatk/hapcall/{aligner}/{ref}/{sample}.gvcf",
+                               aligner=wc.aligner, ref=wc.ref, sample=SAMPLESETS[wc.sampleset]),
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        gvcf="data/gatk/combinedgvcf/{aligner}/{ref}/{sampleset}.gvcf.gz",
+    log:
+        "data/log/gatk_combine/{aligner}/{ref}/{sampleset}.log"
+    shell:
+        "( gatk4 CombineGVCFs "
+        "   -R {input.gvcf}"
+        "   -V {input.gvcf}"
+        "   -O {output.gvcf}"
+        ") >{log} 2>&1"
+
+
+rule gatk4_hapcaller:
+    input:
+        bam=align("data/alignments/{aligner}/{ref}/samples/{sample}.bam"),
+        bai=align("data/alignments/{aligner}/{ref}/samples/{sample}.bam.bai"),
+        ref=lambda wc: config['refs'][wc.ref][:-len(".fasta")]+".2bit",
+    output:
+        gvcf="data/gatk/hapcall/{aligner}/{ref}/{sample}.gvcf",
+    log:
+        "data/log/gatk_hapcall/{aligner}/{ref}/{sample}.log"
+    threads: 16
+    shell:
+        "( gatk4 HaplotypeCallerSpark"
+        "   -R {input.ref}"
+        "   -I {input.bam}"
+        "   -O {output.gvcf}"
+        "   -ALIAS {wildcards.sample}"
+        "   -ERC GVCF"
+        "   --heterozygosity 0.01"
+	"   --spark-master 'local[{threads}]'"
+        #"   --native-pair-hmm-threads {threads}"
+        "   --min-pruning 1"
+        ") >{log} 2>&1"
+
+

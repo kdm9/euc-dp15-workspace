@@ -13,7 +13,7 @@ rule mashsketch:
         lambda wc: reads(expand("data/reads/samples/{sample}.fastq.gz",
                           sample=SAMPLESETS[wc.set])),
     output:
-        "data/mash/k{ksize}-s{sketchsize}/{set}.msh"
+        temp("data/mash/k{ksize}-s{sketchsize}/{set}.msh"),
     log:
         "data/log/mash/sketch/k{ksize}-s{sketchsize}-{set}.log"
     threads: 28
@@ -47,7 +47,7 @@ rule countsketch:
     input:
         reads("data/reads/samples/{sample}.fastq.gz"),
     output:
-        ct="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz",
+        ct=temp("data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz"),
         info="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz.info",
         tsv="data/kwip/sketch/k{ksize}-s{sketchsize}/{sample}.ct.gz.info.tsv",
     log:
@@ -85,7 +85,7 @@ rule kwipdist:
         " -k {output.k}"
         " -t {threads}"
         " {input}"
-        " >{log} 3>&1"
+        " >{log} 2>&1"
 
 rule unique_kmers:
     input:
@@ -94,7 +94,7 @@ rule unique_kmers:
     output:
         "data/readstats/unique-kmers/{set}.tsv",
     threads:
-        16
+        28
     params:
         kmersize=config["denovodist"]["ksize"],
     log:
@@ -107,4 +107,33 @@ rule unique_kmers:
         "    >{output}"
         " ) 2>{log}"
 
+
+rule sourmash_sketch:
+    input:
+        reads("data/reads/samples/{sample}.fastq.gz"),
+    output:
+        temp("data/sourmash/sketch/k{ksize}-s{sketchsize}/{sample}.smh"),
+    log:
+        "data/log/sourmash/sketch/k{ksize}-s{sketchsize}-{sample}.log"
+    shell:
+        "( sourmash compute"
+        "   --name '{wildcards.sample}'"
+        "   -k {wildcards.ksize}"
+        "   -n {wildcards.sketchsize}"
+        "   -o {output}"
+        "   {input}"
+        ") >{log} 2>&1"
+
+rule sourmash_dist:
+    input:
+        lambda wc: expand("data/sourmash/sketch/k{ksize}-s{sketchsize}/{sample}.smh",
+                            ksize=wc.ksize, sketchsize=wc.sketchsize,
+                            sample=SAMPLESETS[wc.set]),
+    output:
+        "data/sourmash/k{ksize}-s{sketchsize}/{set}.dist",
+    log:
+        "data/log/sourmash/dist/k{ksize}-s{sketchsize}-{set}.log"
+    threads: 28
+    shell:
+        "(sourmash compare -k {wildcards.ksize} -o {output} {input} ) >{log} 2>&1"
 

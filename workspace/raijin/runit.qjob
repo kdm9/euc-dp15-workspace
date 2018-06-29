@@ -24,13 +24,13 @@ NEXT=$(qsub -v TARGET=$TARGET,SNAKEFILE=$SNAKEFILE \
 
 source raijin/modules.sh
 
-snakemake --unlock
 
 mkdir -p data/log
 
 snakemake                                                       \
     --snakefile ${SNAKEFILE}                                    \
     -j ${PBS_NCPUS}                                             \
+    --nolock                                                    \
     --rerun-incomplete                                          \
     --keep-going 						                        \
     ${TARGET}                                                   \
