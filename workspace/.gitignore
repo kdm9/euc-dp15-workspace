@@ -3,3 +3,4 @@ data
 sandbox
 rawdata
 *.[oe][[:digit:]]*
+packrat/lib*/

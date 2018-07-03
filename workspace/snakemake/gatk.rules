@@ -3,6 +3,8 @@ configfile: "config.yml"
 RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
 SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
 VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
+# GATK wants 2-bit references
+TWOBIT_REFS = {k: v[:-len(".fasta")] + ".2bit" for k, v in config["refs"].items()}
 
 wildcard_constraints:
     run="[^/]+",
@@ -57,8 +59,8 @@ rule gatk4_hapcaller:
         "   -ALIAS {wildcards.sample}"
         "   -ERC GVCF"
         "   --heterozygosity 0.01"
-	"   --spark-master 'local[{threads}]'"
-        #"   --native-pair-hmm-threads {threads}"
+        "   --spark-master 'local[{threads}]'"
+        "   --TMP_DIR $TMPDIR"
         "   --min-pruning 1"
         ") >{log} 2>&1"
 

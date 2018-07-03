@@ -134,20 +134,31 @@ rule filtered_variants:
                        ref=config["varcall"]["refs"],
                        sampleset=config["varcall"]["samplesets"],
                        filter=config["varcall"]["filters"])),
-rule dbgvc:
-    input:
-        varcall(expand("data/variants/filter_split/{caller}~{aligner}~{ref}~{sampleset}_filtered~{filter}/{region}.{ext}",
-                       region="Chr02:1000000-1010000",
-                       ext=["bcf"],
-                       caller=config["varcall"]["callers"],
-                       aligner=config["varcall"]["aligners"],
-                       ref=config["varcall"]["refs"],
-                       sampleset="Project1PlusOxley",
-                       filter=config["varcall"]["filters"])),
 
 rule varcall:
     input:
         rules.filtered_variants.input,
+
+#######################################################################
+#                           Plink analyses                            #
+#######################################################################
+
+
+subworkflow plink:
+    workdir: "."
+    snakefile: "snakemake/plink.rules"
+
+rule plink_ibs:
+    input:
+        plink(expand("data/plink/ibs/{caller}~{aligner}~{ref}~{sampleset}~filtered-{filter}.{ext}",
+                       caller="mpileup", aligner="bwa", ref="grandisv2chl", filter="default",
+                       ext=["mibs.gz", "mdist.gz"],
+                       sampleset=config["varcall"]["samplesets"])),
+
+rule plink:
+    input:
+        rules.plink_ibs.input,
+
 
 #######################################################################
 #                              All rule                               #
@@ -160,4 +171,5 @@ rule all:
         rules.reads.input,
         rules.align.input,
         rules.varcall.input,
+        rules.plink.input,
 

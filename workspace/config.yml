@@ -45,13 +45,11 @@ varcall:
   aligners:
     - bwa
   callers:
-    #- freebayes
+    - freebayes
     - mpileup
   refs:
     - grandisv2chl
   samplesets:
-    # - Oxley
-    #- Project1
     - Project2
     - Project1PlusOxley
   filters:

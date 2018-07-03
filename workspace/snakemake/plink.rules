@@ -1,0 +1,70 @@
+configfile: "config.yml"
+import snkmk
+RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
+SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
+shell.prefix = "set -euo pipefail; "
+VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["chunksize"])
+
+subworkflow varcall:
+    workdir: ".."
+    snakefile: "varcall.rules"
+
+wildcard_constraints:
+    varcallset="[^/]+",
+
+rule plink_makebed:
+    input:
+        vcf=varcall("data/variants/final/{varcallset}.vcf.gz")
+    output:
+        expand("data/plink/beds/{{varcallset}}.{ext}",
+               ext=["bed", "bim", "fam"])
+    log:
+        "data/log/plink/beds/{varcallset}.log",
+    params:
+        outprefix="data/plink/beds/{varcallset}",
+        minmaf=0.01,
+        maxmissing=0.9,
+        minvcfqual=10,
+        chrset="11 no-xy"
+    threads: 2
+    shell:
+        "( plink"
+        "   --vcf {input.vcf}"
+        "   --out {params.outprefix}"
+        "   --make-bed"
+        "   --allow-extra-chr"
+        "   --chr-set {params.chrset}"
+        "   --vcf-min-qual {params.minvcfqual}"
+        "   --maf {params.minmaf}"
+        "   --geno {params.maxmissing}"
+        "   --threads {threads}"
+        ") 1>{log} 2>&1"
+
+rule plink_ibs:
+    input:
+        "data/plink/beds/{varcallset}.bed",
+    output:
+        expand("data/plink/ibs/{{varcallset}}.{ext}",
+               ext=["mdist.gz", "mdist.id", "mibs.gz", "mibs.id"])
+    log:
+        "data/log/plink/ibs/{varcallset}.log",
+    params:
+        inprefix="data/plink/beds/{varcallset}",
+        outprefix="data/plink/ibs/{varcallset}",
+        minmaf=0.01,
+        maxmissing=0.8,
+        chrset="11 no-xy"
+    threads: 8
+    shell:
+        "( plink"
+        "   --bfile {params.inprefix}"
+        "   --out {params.outprefix}"
+        "   --distance square gz ibs 1-ibs" 
+        "   --allow-extra-chr"
+        "   --chr-set {params.chrset}"
+        "   --maf {params.minmaf}"
+        "   --geno {params.maxmissing}"
+        "   --threads {threads}"
+        ") 1>{log} 2>&1"
+
+

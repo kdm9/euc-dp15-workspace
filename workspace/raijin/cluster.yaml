@@ -49,4 +49,3 @@ gatk4_hapcaller:
   time: '24:00:00'
   mem: 63G
   queue: normal
-  project: xf1

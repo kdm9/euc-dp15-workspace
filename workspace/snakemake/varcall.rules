@@ -40,18 +40,20 @@ rule freebayes:
     params:
         theta=config["varcall"].get("theta_prior", 0.01),
     shell:
-        "( samtools view"                   # some versions of freebayes don't seek to region
-        "   --regions '{wildcards.region}'" # also region format is zero-based in freebayes
-        "   -Ou"                            # so we extract the correct region from the BAM
-        "    {input.bam}"
+        "( samtools view"  # some versions of freebayes don't seek to region
+        "   -u"            # also region format is zero-based in freebayes
+        "    {input.bam}"  # so we extract the correct region from the BAM
+        "   '{wildcards.region}'"
         " | freebayes"
         "   --theta {params.theta}"
-        "   --use-reference-allele"
-        "   --min-mapping-quality 10"
-        "   --min-base-quality 10"
-        "   --use-mapping-quality"
-        "   --fasta-reference {input.ref}"
+        "   --use-best-n-alleles 4"
+        "   --min-alternate-fraction 0"
+        "   --min-alternate-count 1" # per sample
+        "   --min-alternate-total 3" # across all samples
+        "   --min-coverage 5" # across all samples
+        "   --strict-vcf"
         "   --stdin"
+        "   --fasta-reference {input.ref}"
         " | bcftools view"
         "   -O u  -o {output.bcf}"
         " ) >{log} 2>&1"
@@ -193,5 +195,3 @@ rule stats:
         "data/stats/variants/{path}.varstats"
     shell:
         "bcftools stats -s - -d 0,1000,2 --threads {threads} {input} >{output}"
-
-
