@@ -59,8 +59,7 @@ varcall:
           INFO/DP >= 5 &&
           INFO/AN >= 3'
     strict: >
-      -i 'INFO/MQ >= 0 &&
-          QUAL >= 40 &&
+      -i 'QUAL >= 40 &&
           ALT != "." &&
           INFO/DP >= 10 &&
           ((INFO/AN / N_SAMPLES)*2) > 0.50 &&

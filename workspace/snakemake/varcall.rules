@@ -13,8 +13,8 @@ VARCALL_REGIONS = snkmk.make_regions(config["refs"], window=config["varcall"]["c
 #except (AssertionError, NameError) as e:
 #    pipeortemp = temp
 # disable temp too for now
-temp = lambda x: x
-pipeortemp = temp
+#temp = lambda x: x
+#pipeortemp = temp
 
 wildcard_constraints:
     run="[^/]+",
@@ -34,7 +34,7 @@ rule freebayes:
         bam=align("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam"),
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        bcf=pipeortemp("data/variants/raw_split/freebayes~{aligner}~{ref}~{sampleset}/{region}.bcf"),
+        bcf="data/variants/raw_split/freebayes~{aligner}~{ref}~{sampleset}/{region}.bcf",
     log:
         "data/log/freebayes/{aligner}~{ref}~{sampleset}/{region}.log"
     params:
@@ -63,8 +63,7 @@ rule mpileup:
         bam=align("data/alignments/{aligner}/{ref}/sets/{sampleset}.bam"),
         ref=lambda wc: config['refs'][wc.ref],
     output:
-        #bcf=pipeortemp("data/variants/raw_split/mpileup~{aligner}~{ref}~{sampleset}/{region}.bcf"),
-        bcf=("data/variants/raw_split/mpileup~{aligner}~{ref}~{sampleset}/{region}.bcf"),
+        bcf="data/variants/raw_split/mpileup~{aligner}~{ref}~{sampleset}/{region}.bcf",
     log:
         "data/log/mpileup/{aligner}~{ref}~{sampleset}/{region}.log"
     params:
@@ -127,7 +126,7 @@ rule bcffilter:
         "   --fasta-ref {input.ref}"
         "   --do-not-normalize"
         "   --multiallelics +snps" # Split multi-alleic sites
-        "   -O u  -o {output.bcf}"
+        "   -O b  -o {output.bcf}"
         " ) >{log} 2>&1"
 
 localrules: bcfmerge_fofn
