@@ -1,5 +1,7 @@
 import csv
 from collections import defaultdict
+from glob import glob
+from os.path import basename, splitext
 
 
 def parsefai(fai):
@@ -67,14 +69,30 @@ def make_runlib2samp():
     return dict(rl2s), dict(s2rl)
 
 
+def stripext(path, exts=".txt"):
+    if isinstance(exts, str):
+        exts = [exts,]
+    for ext in exts:
+        if path.endswith(ext):
+            path = path[:-len(ext)]
+    return path
+
 def make_samplesets(sets):
     ssets = defaultdict(list)
     everything = set()
     for run in _iter_metadata():
+        if run["Include"] != "Y":
+            continue
         for sset in sets:
             if run[sset].upper().startswith('Y'):
                 ssets[sset].append(run["sample"])
-        if run["Include"] == "Y":
-            everything.add(run["sample"])
+        everything.add(run["sample"])
+
+    for setfile in glob("../metadata/samplesets/*.txt"):
+        setname = stripext(basename(setfile), ".txt")
+        with open(setfile) as fh:
+            samples = [x.strip() for x in fh]
+        ssets[setname] = samples
+        everything.update(samples)
     ssets["all_samples"] = everything
     return {n: list(sorted(set(s))) for n, s in ssets.items()}
