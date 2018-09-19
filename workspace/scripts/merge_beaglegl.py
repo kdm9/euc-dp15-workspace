@@ -9,7 +9,12 @@ nsnps_file = snakemake.output.nsnps
 threads = snakemake.threads
 wcfile = mktemp()
 
-with Popen("pigz -p {} >{}".format(threads, output), shell=True, stdin=PIPE) as outproc:
+if output.endswith(".gz"):
+    outcmd = "pigz -p {}".format(threads)
+else:
+    outcmd = "cat -"
+
+with Popen("{} >{}".format(outcmd, output), shell=True, stdin=PIPE) as outproc:
     out = outproc.stdin
     # Grab header
     hdr = check_output("zcat {} | head -n 1".format(infiles[0]), shell=True)

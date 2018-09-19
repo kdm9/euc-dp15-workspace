@@ -11,7 +11,7 @@ shell.prefix = "set -euo pipefail; "
 
 subworkflow reads:
     workdir: "."
-    snakefile: "snakemake/reads.rules"
+    snakefile: "rules/reads.rules"
 
 rule qc_runlib:
     input:
@@ -41,7 +41,7 @@ rule reads:
 
 subworkflow denovo:
     workdir: "."
-    snakefile: "snakemake/denovo.rules"
+    snakefile: "rules/denovo.rules"
 
 rule kwip:
     input:
@@ -75,7 +75,7 @@ rule denovo:
 
 subworkflow align:
     workdir: "."
-    snakefile: "snakemake/align.rules"
+    snakefile: "rules/align.rules"
 
 rule align_librun:
     input:
@@ -122,7 +122,7 @@ rule align:
 
 subworkflow varcall:
     workdir: "."
-    snakefile: "snakemake/varcall.rules"
+    snakefile: "rules/varcall.rules"
 
 
 rule filtered_variants:
@@ -146,7 +146,7 @@ rule varcall:
 
 subworkflow plink:
     workdir: "."
-    snakefile: "snakemake/plink.rules"
+    snakefile: "rules/plink.rules"
 
 rule plink_ibs:
     input:

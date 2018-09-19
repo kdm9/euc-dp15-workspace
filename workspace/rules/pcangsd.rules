@@ -30,7 +30,7 @@ rule all:
                sampleset=config["pcangsd"]["samplesets"],
                nsnps=config["pcangsd"]["nsnps"],
                rep=["{:03d}".format(i) for i in range(config["pcangsd"]["reps"])],
-               ext=["cov", "indf.npy", "expg.npy"]),
+               ext=["cov", "indf.npy", "expg.npy", "expg.tsv.gz"]),
 
 rule final:
     input:
@@ -79,23 +79,22 @@ rule angsd_beaglegl_merge:
         lambda wc: expand("data/angsd/beaglegl/{aligner}~{ref}~{sampleset}/{region}.beagle.gz",
                           aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset, region=ANGSD_REGIONS[wc.ref])
     output:
-        beagle="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.beagle.gz",
+        beagle="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.beagle",
         nsnps="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.nsnps",
     threads: 4
     script: "../scripts/merge_beaglegl.py"
 
 rule angsd_beaglegl_subset:
     input:
-        beagle="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.beagle.gz",
+        beagle="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.beagle",
         nsnps="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.nsnps",
     output:
         beagle="data/angsd/beaglegl_subsets/{aligner}~{ref}~{sampleset}~{nsnps}snps~rep{rep}.beagle.gz",
     threads: 1
     shell:
-        "zcat {input.beagle} | "
-        " randomlines"
+        "randomlines"
         "   -H 1 -S $(cat {input.nsnps})"
-        "   -n {wildcards.nsnps} -e {wildcards.rep} /dev/fd/0 |"
+        "   -n {wildcards.nsnps} -e {wildcards.rep} {input.beagle} |"
         "  pigz -p {threads} > {output.beagle}"
 
 rule pcangsd:
@@ -105,7 +104,7 @@ rule pcangsd:
         "data/angsd/pcangsd/{aligner}~{ref}~{sampleset}~{nsnps}snps~rep{rep}.cov",
         "data/angsd/pcangsd/{aligner}~{ref}~{sampleset}~{nsnps}snps~rep{rep}.expg.npy",
         "data/angsd/pcangsd/{aligner}~{ref}~{sampleset}~{nsnps}snps~rep{rep}.indf.npy",
-    threads: 4
+    threads: 1
     params:
         prefix=lambda wildcards, output: output[0][:-len(".cov")],
     log:
@@ -116,10 +115,19 @@ rule pcangsd:
         "   -threads {threads}"
         "   -o {params.prefix}"
         "   -beagle {input.beagle}"
+        "   -geno 0.8"
         "   -indf_save"
         "   -sites_save"
         "   -expg_save"
         ")>{log} 2>&1"
+
+rule npy2tsv:
+    input:
+        "data/angsd/pcangsd/{file}.npy",
+    output:
+        "data/angsd/pcangsd/{file}.tsv.gz",
+    shell:
+        "./scripts/npy2tsv.py {input} {output}"
 
 rule pcangsd_admix:
     input:
