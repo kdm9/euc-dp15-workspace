@@ -1,7 +1,7 @@
 configfile: "config.yml"
 import snkmk
 RUNLIB2SAMP, SAMP2RUNLIB = snkmk.make_runlib2samp()
-SAMPLESETS = snkmk.make_samplesets(config['sample_sets'])
+SAMPLESETS = snkmk.make_samplesets(config['sample_sets']) # the argument does nothing
 shell.prefix = "set -euo pipefail; "
 
 wildcard_constraints:
@@ -179,6 +179,37 @@ rule mergestats:
     shell:
         "cat {input} > {output}"
 
+localrules: all_bamstats
+rule all_bamstats:
+    input:
+        expand("data/stats/bamstats_sample/{aligner}~{ref}~{sample}.tsv",
+               aligner=config["mapping"]["aligners"],
+               ref=config["mapping"]["refs"],
+               sample=SAMPLESETS["all_samples"]),
+        expand("data/stats/summarynumbers_{aligner}~{ref}.tsv",
+               aligner=config["mapping"]["aligners"],
+               ref=config["mapping"]["refs"]),
+
+rule bamstat_summary_nums:
+    input:
+        lambda wc: expand("data/stats/bamstats_sample/{aligner}~{ref}~{sample}.tsv",
+                          aligner=wc.aligner, ref=wc.ref,
+                          sample=SAMPLESETS["all_samples"]),
+    output:
+        "data/stats/summarynumbers_{aligner}~{ref}.tsv"
+    shell:
+        "./scripts/extractsn.py {input} > {output}"
+
+
+rule bamstat_samps:
+    input:
+        "data/alignments/{aligner}/{ref}/samples/{sample}.bam",
+    output:
+        "data/stats/bamstats_sample/{aligner}~{ref}~{sample}.tsv"
+    log:
+        "data/log/bamstats_sample/{aligner}~{ref}~{sample}.tsv"
+    shell:
+        "(samtools stats -i 5000 -x {input} >{output}) >{log}"
 
 rule bamstats_insertionsize:
     input:

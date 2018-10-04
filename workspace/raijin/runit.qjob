@@ -1,7 +1,7 @@
 #!/bin/bash
-#PBS -q normalbw
+#PBS -q expressbw
 #PBS -l ncpus=28
-#PBS -l walltime=48:00:00
+#PBS -l walltime=24:00:00
 #PBS -l mem=250G
 #PBS -l jobfs=1T
 #PBS -l other=gdata1

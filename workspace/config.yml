@@ -94,10 +94,12 @@ pcangsd:
       #- Project1
     - Project2-sideroxylon
     - Project2-albens
+    - Project2-sideroxylon-no-outlier
+    - Project2-albens-no-outlier
   nsnps:
     #- 5000000
     - 100000
-  reps: 5
+  reps: 20
   angsd_filters: "-SNP_pval 1e-4 -doMaf 2 -doPost 1  -minMaf 0.01 -minInd 50"
   admix:
     K: [1,2,3,4,5,6]

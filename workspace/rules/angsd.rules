@@ -1,0 +1,99 @@
+configfile: "config.yml"
+import snkmk
+runlib2samp, samp2runlib = snkmk.make_runlib2samp()
+samplesets = snkmk.make_samplesets(config['sample_sets'])
+shell.prefix = "set -euo pipefail; "
+angsd_regions = snkmk.make_regions(config["refs"], window=config["pcangsd"]["angsd_chunksize"])
+
+
+wildcard_constraints:
+    run="[^/]+",
+    lib="[^/]+",
+    aligner="[^/]+",
+    sample="[^/]+",
+    sampleset="[^/]+",
+    region="[^/]+",
+    ref="[^/]+",
+    type="[^/]+",
+
+rule all:
+    input:
+        expand("data/angsd/beaglegl_subsets/{aligner}~{ref}~{sampleset}~{nsnps}snps~rep{rep}.beagle.gz",
+               aligner=config["pcangsd"]["aligners"],
+               ref=config["pcangsd"]["refs"],
+               sampleset=config["pcangsd"]["samplesets"],
+               nsnps=config["pcangsd"]["nsnps"],
+               rep=["{:03d}".format(i) for i in range(config["pcangsd"]["reps"])]),
+        expand("data/angsd/pcangsd/{aligner}~{ref}~{sampleset}~{nsnps}snps~rep{rep}.{ext}",
+               aligner=config["pcangsd"]["aligners"],
+               ref=config["pcangsd"]["refs"],
+               sampleset=config["pcangsd"]["samplesets"],
+               nsnps=config["pcangsd"]["nsnps"],
+               rep=["{:03d}".format(i) for i in range(config["pcangsd"]["reps"])],
+               ext=["cov", "indf.npy", "expg.npy", "expg.tsv.gz"]),
+
+rule final:
+    input:
+        expand("data/angsd/pcangsd_admix/{aligner}~{ref}~{sampleset}~{nsnps}snps~rep{rep}.k{k}.a{alpha}.{ext}",
+               aligner=config["pcangsd"]["aligners"],
+               ref=config["pcangsd"]["refs"],
+               sampleset=config["pcangsd"]["samplesets"],
+               nsnps=config["pcangsd"]["nsnps"],
+               rep=["{:03d}".format(i) for i in range(config["pcangsd"]["reps"])],
+               k=config["pcangsd"]["admix"]["k"],
+               alpha=config["pcangsd"]["admix"]["alpha"],
+               ext=["qopt", "fopt.npy"]),
+
+
+
+subworkflow align:
+    workdir: ".."
+    snakefile: "align.rules"
+
+
+rule angsd_beaglegl_region:
+    input:
+        bamlist=align("data/bamlists/{aligner}/{ref}/{sampleset}.bamlist"),
+        ref=lambda wc: config['refs'][wc.ref],
+    output:
+        temp("data/angsd/beaglegl/{aligner}~{ref}~{sampleset}/{region}.beagle.gz"),
+    log:
+        "data/log/angsd_beaglegl/{aligner}~{ref}~{sampleset}/{region}.log"
+    params:
+        prefix=lambda wildcards, output: output[0][:-len(".beagle.gz")],
+        angsd_filters=config["pcangsd"]["angsd_filters"],
+    shell:
+        "(angsd "
+        "   -out {params.prefix}"
+        "   -bam {input.bamlist}"
+        "   -ref {input.ref}"
+        "   -anc {input.ref}"
+        "   -r {wildcards.region}"
+        "   -nthreads {threads}"
+        "   -gl 2 -doglf 2 -dogeno -domajorminor 1"
+        "   {params.angsd_filters}"
+        ") >{log} 2>&1"
+
+rule angsd_beaglegl_merge:
+    input:
+        lambda wc: expand("data/angsd/beaglegl/{aligner}~{ref}~{sampleset}/{region}.beagle.gz",
+                          aligner=wc.aligner, ref=wc.ref, sampleset=wc.sampleset, region=angsd_regions[wc.ref])
+    output:
+        beagle="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.beagle",
+        nsnps="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.nsnps",
+    threads: 4
+    script: "../scripts/merge_beaglegl.py"
+
+rule angsd_beaglegl_subset:
+    input:
+        beagle="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.beagle",
+        nsnps="data/angsd/beaglegl/{aligner}~{ref}~{sampleset}.nsnps",
+    output:
+        beagle="data/angsd/beaglegl_subsets/{aligner}~{ref}~{sampleset}~{nsnps}snps~rep{rep}.beagle.gz",
+    threads: 1
+    shell:
+        "randomlines"
+        "   -h 1 -s $(cat {input.nsnps})"
+        "   -n {wildcards.nsnps} -e {wildcards.rep} {input.beagle} |"
+        "  pigz -p {threads} > {output.beagle}"
+
