@@ -31,6 +31,7 @@ snakemake                                                       \
     --snakefile ${SNAKEFILE}                                    \
     -j ${PBS_NCPUS}                                             \
     --nolock                                                    \
+    --notemp                                                    \
     --rerun-incomplete                                          \
     --keep-going 						                        \
     ${TARGET}                                                   \

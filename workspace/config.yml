@@ -67,18 +67,16 @@ varcall:
     # Above is presence rate, >50%
 
 angsd:
-  mindepth: 10
-  maxdepth: 1000
-  minmapq: 30
-  minq: 10
-  snppval: 1e-3
-  minind: 10
-  minmaf: 0.02
-  minMAD: 3 # Number of reads with minor allel
-  glmethod: 2 # gatk
+  chunksize: 1000000
+  filters:
+    angsd_default:  "-SNP_pval 1e-3  -minMaf 0.0001 -minInd 10 -setMinDepth 10 -minQ 10"
   aligners:
     - bwa
-  genome: grandisv2chl
+  refs:
+    - grandisv2chl
+  samplesets:
+    - Project2-sideroxylon-no-outlier
+    - Project2-albens-no-outlier
 
 beagle:
   chunksize: 1e6
